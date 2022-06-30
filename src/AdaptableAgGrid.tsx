@@ -2,7 +2,7 @@ import * as React from 'react';
 // import Adaptable Component and other types
 import AdaptableReact, {
     AdaptableOptions,
-    AdaptableApi,
+    AdaptableApi, AdaptableModule, AdaptableMenuItem,
 } from '@adaptabletools/adaptable-react-aggrid';
 
 // import agGrid Component
@@ -19,79 +19,125 @@ import '@ag-grid-community/all-modules/dist/styles/ag-theme-alpine.css';
 import '@ag-grid-community/all-modules/dist/styles/ag-theme-alpine-dark.css';
 
 import {
-    AllEnterpriseModules, ColDef,
+    AllEnterpriseModules,
     GridOptions,
 } from '@ag-grid-enterprise/all-modules';
 
-// create ag-Grid Column Definitions
-const columnDefs:ColDef[] = [
-    {
-        colId:'id',
-        hide:true,
-        suppressFiltersToolPanel:true,
-        suppressColumnsToolPanel:true
-    },
-    {
-        headerName: 'Auto Make',
-        field: 'make',
-        editable: true,
-        filter: true,
-        sortable: true,
-        type: 'abColDefString',
-    },
-    {
-        headerName: 'Model',
-        field: 'model',
-        editable: true,
-        filter: true,
-        sortable: true,
-        type: 'abColDefString',
-    },
-    {
-        headerName: 'Price',
-        field: 'price',
-        editable: true,
-        filter: true,
-        sortable: true,
-        type: 'abColDefNumber',
-    },
-    {
-        headerName: 'Date manufactured',
-        field: 'date',
-        type: 'abColDefDate',
-        filter: true,
-        floatingFilter: true,
-    },
-];
+import {columnDefs} from "./columnDefs";
+import {rowData} from "./rowData";
+import finance from '@adaptabletools/adaptable-plugin-finance';
 
-// some dummy data
-const rowData = [
-    { id: 1, make: 'Toyota', model: 'Celica', price: 35000, date: '2010-01-02' },
-    { id: 2, make: 'Ford', model: 'Mondeo', price: 32000, date: '2012-01-02' },
-    { id: 3, make: 'Ford', model: 'Fiesta', price: 22000, date: '2014-01-02' },
-    { id: 4, make: 'Porsche', model: 'Boxter', price: 72000, date: '2016-01-02' },
+const hiddenContextMenus: AdaptableModule[] = [
+    'CellSummary',
+    'ConditionalStyle',
+    'CustomSort',
+    'BulkUpdate',
+    'Dashboard',
+    'Export',
+    'Filter',
+    'FlashingCell',
+    'FormatColumn',
+    'GridInfo',
+    'Layout',
+    'PlusMinus',
 ];
 
 // let ag-grid know which columns and what data to use and add some other properties
 const gridOptions: GridOptions = {
+    defaultColDef: {
+        resizable: true,
+        enableRowGroup: true,
+        sortable: true,
+        editable: true,
+        filter: true,
+        floatingFilter: true,
+    },
     columnDefs: columnDefs,
     rowData: rowData,
     sideBar: true,
+    suppressMenuHide: true,
+    enableRangeSelection: true,
+    statusBar: {
+        statusPanels: [
+            {statusPanel: 'agTotalRowCountComponent', align: 'left'},
+            {statusPanel: 'agFilteredRowCountComponent'},
+            {
+                key: 'Center Panel',
+                statusPanel: 'AdaptableStatusPanel',
+                align: 'center',
+            },
+        ],
+    },
 };
 
 // build the AdaptableOptions object
 // in this example we are NOT passing in predefined config but in the real world you will ship the AdapTable with objects and permissions
 const adaptableOptions: AdaptableOptions = {
-    primaryKey: 'id',
+    primaryKey: 'EmployeeId',
     licenseKey: process.env.REACT_APP_ADAPTABLE_LICENSE_KEY,
-    userName: 'sandbox user',
-    adaptableId: 'adaptable react demo',
+    userName: 'testUserFinsemble',
+    adaptableId: 'FinsembleDemo',
+    plugins: [
+        finance({
+            fdc3Columns: {
+                contactColumns: [
+                    {
+                        columnId: 'Name',
+                        nameColumnId: 'Name',
+                        emailColumnId: 'Email',
+                        intents: ['StartChat', 'ViewContact'],
+                    },
+                ],
+                countryColumns: [
+                    {
+                        columnId: 'Country',
+                        nameColumnId: 'Country',
+                        isoalpha3ColumnId: 'CountryCode',
+                        intents: ['ViewChart'],
+                    },
+                ],
+                organizationColumns: [
+                    {
+                        columnId: 'Company',
+                        nameColumnId: 'Company',
+                        intents: ['ViewAnalysis', 'ViewNews'],
+                    },
+                ],
+            },
+        }),
+    ],
+    menuOptions: {
+        // remove some menu items to keep things easier
+        showAdaptableColumnMenu: (menuItem: AdaptableMenuItem) => {
+            return !hiddenContextMenus.includes(menuItem.module as AdaptableModule);
+        },
+        showAdaptableContextMenu: (menuItem: AdaptableMenuItem) => {
+            return !hiddenContextMenus.includes(menuItem.module as AdaptableModule);
+        },
+    },
     predefinedConfig: {
         Dashboard: {
             Tabs: [
                 {
-                    Name: 'Welcome',
-                    Toolbars: ['Layout'],
+                    Name: 'Demo',
+                    Toolbars: ['SystemStatus'],
+                },
+            ],
+        },
+        Layout: {
+            CurrentLayout: 'Basic Layout',
+            Layouts: [
+                {
+                    Name: 'Basic Layout',
+                    Columns: [
+                        'Name',
+                        'Year',
+                        'Company',
+                        'Country',
+                        'CountryCode',
+                        'Email',
+                        'Rating',
+                    ],
                 },
             ],
         },
