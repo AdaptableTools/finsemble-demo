@@ -164,7 +164,7 @@ export const AdaptableAgGrid = ()=>{
                 }}
                 modules={modules}
             />
-            <div className="ag-theme-alpine" style={{ flex: 1 }}>
+            <div className="ag-theme-balham" style={{ flex: 1 , height: 'calc(100vh - 40px)'}}>
                 <AgGridReact gridOptions={gridOptions} modules={modules} />
             </div>
         </div>
