@@ -197,7 +197,7 @@ export const AdaptableAgGrid = ()=>{
 
                                 const fdc3Api = getFDC3();
                                 if(fdc3Api){
-                                    fdc3Api.raiseIntent(eventInfo.intent, {afl:'tesr'});
+                                    fdc3Api.raiseIntent(eventInfo.intent, eventInfo.context);
                                 }else{
                                     console.error('AdapTable: No fdc3 object available!')
                                 }
