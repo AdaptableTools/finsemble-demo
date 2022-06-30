@@ -116,6 +116,9 @@ const adaptableOptions: AdaptableOptions = {
         },
     },
     predefinedConfig: {
+        Theme:{
+            CurrentTheme:"dark"
+        },
         Dashboard: {
             Tabs: [
                 {
