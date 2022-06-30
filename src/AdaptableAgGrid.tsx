@@ -2,7 +2,7 @@ import * as React from 'react';
 // import Adaptable Component and other types
 import AdaptableReact, {
     AdaptableOptions,
-    AdaptableApi, AdaptableModule, AdaptableMenuItem,
+    AdaptableApi, AdaptableModule, AdaptableMenuItem, AdaptableFDC3EventInfo,
 } from '@adaptabletools/adaptable-react-aggrid';
 
 // import agGrid Component
@@ -161,6 +161,49 @@ export const AdaptableAgGrid = ()=>{
                     // save a reference to adaptable api
                     adaptableApiRef.current = adaptableApi;
                     console.log('Adaptable ready!');
+
+                    adaptableApi.eventApi.on(
+                        'FDC3MessageSent',
+                        (eventInfo: AdaptableFDC3EventInfo) => {
+                            if (eventInfo.eventType === 'RaiseIntent') {
+                                const context = JSON.stringify(eventInfo.context);
+                                const intent = JSON.stringify(eventInfo.intent);
+                                switch (eventInfo.context.type) {
+                                    case 'fdc3.contact':
+                                        adaptableApi.systemStatusApi.setInfoSystemStatus(
+                                            'Single Contact (' + intent + ')',
+                                            context
+                                        );
+                                        break;
+                                    case 'fdc3.contactList':
+                                        adaptableApi.systemStatusApi.setSuccessSystemStatus(
+                                            'Multiple Contacts (' + intent + ')',
+                                            context
+                                        );
+                                        break;
+                                    case 'fdc3.organization':
+                                        adaptableApi.systemStatusApi.setWarningSystemStatus(
+                                            'Organization (' + intent + ')',
+                                            context
+                                        );
+                                        break;
+                                    case 'fdc3.country':
+                                        adaptableApi.systemStatusApi.setErrorSystemStatus(
+                                            'Country (' + intent + ')',
+                                            context
+                                        );
+                                        break;
+                                }
+
+                                const fdc3Api = getFDC3();
+                                if(fdc3Api){
+                                    fdc3Api.raiseIntent(eventInfo.intent, {afl:'tesr'});
+                                }else{
+                                    console.error('AdapTable: No fdc3 object available!')
+                                }
+                            }
+                        }
+                    );
                 }}
                 modules={modules}
             />
@@ -169,4 +212,9 @@ export const AdaptableAgGrid = ()=>{
             </div>
         </div>
     );
+}
+
+
+const getFDC3 = ()=>{
+    return (globalThis as any).fdc3;
 }
