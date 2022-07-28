@@ -33,7 +33,7 @@ const hiddenContextMenus: AdaptableModule[] = [
     'CustomSort',
     'BulkUpdate',
     'Dashboard',
-    'Export',
+   // 'Export',
     'Filter',
     'FlashingCell',
     'FormatColumn',
@@ -86,6 +86,7 @@ const adaptableOptions: AdaptableOptions = {
                         nameColumnId: 'Name',
                         emailColumnId: 'Email',
                         intents: ['StartChat', 'ViewContact'],
+                        showBroadcastContextMenu:true
                     },
                 ],
                 countryColumns: [
@@ -162,41 +163,25 @@ export const AdaptableAgGrid = ()=>{
                     adaptableApiRef.current = adaptableApi;
                     console.log('Adaptable ready!');
 
+                    const fdc3Api = getFDC3();
+                    fdc3Api?.addIntentListener("ViewChart", (context:any) => {
+                        const { type } = context;
+
+                        console.log(context)
+
+                        adaptableApi.systemStatusApi.setInfoSystemStatus(
+                                    'FDC3 Intent (' + type + ')',
+                                    JSON.stringify(context)
+                                );
+                    })
+
                     adaptableApi.eventApi.on(
                         'FDC3MessageSent',
                         (eventInfo: AdaptableFDC3EventInfo) => {
                             if (eventInfo.eventType === 'RaiseIntent') {
-                                const context = JSON.stringify(eventInfo.context);
-                                const intent = JSON.stringify(eventInfo.intent);
-                                switch (eventInfo.context.type) {
-                                    case 'fdc3.contact':
-                                        adaptableApi.systemStatusApi.setInfoSystemStatus(
-                                            'Single Contact (' + intent + ')',
-                                            context
-                                        );
-                                        break;
-                                    case 'fdc3.contactList':
-                                        adaptableApi.systemStatusApi.setSuccessSystemStatus(
-                                            'Multiple Contacts (' + intent + ')',
-                                            context
-                                        );
-                                        break;
-                                    case 'fdc3.organization':
-                                        adaptableApi.systemStatusApi.setWarningSystemStatus(
-                                            'Organization (' + intent + ')',
-                                            context
-                                        );
-                                        break;
-                                    case 'fdc3.country':
-                                        adaptableApi.systemStatusApi.setErrorSystemStatus(
-                                            'Country (' + intent + ')',
-                                            context
-                                        );
-                                        break;
-                                }
-
                                 const fdc3Api = getFDC3();
                                 if(fdc3Api){
+                                    console.log('Raising intent: ',eventInfo.intent, eventInfo.context)
                                     fdc3Api.raiseIntent(eventInfo.intent, eventInfo.context);
                                 }else{
                                     console.error('AdapTable: No fdc3 object available!')
