@@ -40,6 +40,9 @@ interface FinsemblePluginOptions {
    */
   onContext?: (context: Context, adaptableApi: AdaptableApi) => void;
 
+  // TODO: use beforeInit to change stateOptions
+  persistInFinsable?: boolean;
+
   /**
    * @default true
    */
@@ -125,7 +128,7 @@ class FinsemblePlugin extends AdaptablePlugin {
     const fdc3 = this.fdc3!;
     const onContext = this.options.onContext;
     const adaptable = this.adaptable;
-    debugger;
+
     if (onContext) {
       fdc3.addContextListener(null, (context: Context) => {
         onContext(context, adaptable!.api);

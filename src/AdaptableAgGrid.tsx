@@ -78,7 +78,6 @@ const finastraAdaptableStorageKey = 'finastra.adaptable.state';
 const stateOptions: AdaptableOptions['stateOptions'] = {
   loadState: async () => {
     const StorageClient = FSBL.Clients.StorageClient;
-
     const data = await StorageClient.getStandardized({
       key: finastraAdaptableStorageKey,
       topic: finastraAdaptableStorageTopic,
