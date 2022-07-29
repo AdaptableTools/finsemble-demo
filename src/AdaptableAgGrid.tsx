@@ -1,9 +1,14 @@
 import * as React from 'react';
 // import Adaptable Component and other types
 import AdaptableReact, {
-    AdaptableOptions,
-    AdaptableApi, AdaptableModule, AdaptableMenuItem, AdaptableFDC3EventInfo,
+  AdaptableOptions,
+  AdaptableApi,
+  AdaptableModule,
+  AdaptableMenuItem,
+  AdaptableFDC3EventInfo,
 } from '@adaptabletools/adaptable-react-aggrid';
+
+import finsemblePlugin from './FinsemblePlugin';
 
 // import agGrid Component
 import { AgGridReact } from '@ag-grid-community/react';
@@ -18,188 +23,196 @@ import '@ag-grid-community/all-modules/dist/styles/ag-grid.css';
 import '@ag-grid-community/all-modules/dist/styles/ag-theme-alpine.css';
 import '@ag-grid-community/all-modules/dist/styles/ag-theme-alpine-dark.css';
 
-import {
-    AllEnterpriseModules,
-    GridOptions,
-} from '@ag-grid-enterprise/all-modules';
+import { AllEnterpriseModules, GridOptions } from '@ag-grid-enterprise/all-modules';
 
-import {columnDefs} from "./columnDefs";
-import {rowData} from "./rowData";
+import { columnDefs } from './columnDefs';
+import { rowData } from './rowData';
 import finance from '@adaptabletools/adaptable-plugin-finance';
+import { rejects } from 'assert';
 
 const hiddenContextMenus: AdaptableModule[] = [
-    'CellSummary',
-    'ConditionalStyle',
-    'CustomSort',
-    'BulkUpdate',
-    'Dashboard',
-   // 'Export',
-    'Filter',
-    'FlashingCell',
-    'FormatColumn',
-    'GridInfo',
-    'Layout',
-    'PlusMinus',
+  'CellSummary',
+  'ConditionalStyle',
+  'CustomSort',
+  'BulkUpdate',
+  'Dashboard',
+  // 'Export',
+  'Filter',
+  'FlashingCell',
+  'FormatColumn',
+  'GridInfo',
+  'Layout',
+  'PlusMinus',
 ];
 
 // let ag-grid know which columns and what data to use and add some other properties
 const gridOptions: GridOptions = {
-    defaultColDef: {
-        resizable: true,
-        enableRowGroup: true,
-        sortable: true,
-        editable: true,
-        filter: true,
-        floatingFilter: true,
-    },
-    columnDefs: columnDefs,
-    rowData: rowData,
-    sideBar: true,
-    suppressMenuHide: true,
-    enableRangeSelection: true,
-    statusBar: {
-        statusPanels: [
-            {statusPanel: 'agTotalRowCountComponent', align: 'left'},
-            {statusPanel: 'agFilteredRowCountComponent'},
-            {
-                key: 'Center Panel',
-                statusPanel: 'AdaptableStatusPanel',
-                align: 'center',
-            },
-        ],
-    },
+  defaultColDef: {
+    resizable: true,
+    enableRowGroup: true,
+    sortable: true,
+    editable: true,
+    filter: true,
+    floatingFilter: true,
+  },
+  columnDefs: columnDefs,
+  rowData: rowData,
+  sideBar: true,
+  suppressMenuHide: true,
+  enableRangeSelection: true,
+  statusBar: {
+    statusPanels: [
+      { statusPanel: 'agTotalRowCountComponent', align: 'left' },
+      { statusPanel: 'agFilteredRowCountComponent' },
+      {
+        key: 'Center Panel',
+        statusPanel: 'AdaptableStatusPanel',
+        align: 'center',
+      },
+    ],
+  },
+};
+
+const finastraAdaptableStorageTopic = 'finastra.adaptable.storage';
+const finastraAdaptableStorageKey = 'finastra.adaptable.state';
+const stateOptions: AdaptableOptions['stateOptions'] = {
+  loadState: async () => {
+    const StorageClient = FSBL.Clients.StorageClient;
+
+    const data = await StorageClient.getStandardized({
+      key: finastraAdaptableStorageKey,
+      topic: finastraAdaptableStorageTopic,
+    });
+
+    if (data.err) {
+      return Promise.reject(data.err);
+    } else {
+      return JSON.parse(data.data);
+    }
+  },
+  saveState: async (state) => {
+    const stateStr = JSON.stringify(state);
+    const StorageClient = FSBL.Clients.StorageClient;
+
+    return StorageClient.save({
+      key: finastraAdaptableStorageKey,
+      topic: finastraAdaptableStorageTopic,
+      value: stateStr,
+    });
+  },
 };
 
 // build the AdaptableOptions object
 // in this example we are NOT passing in predefined config but in the real world you will ship the AdapTable with objects and permissions
 const adaptableOptions: AdaptableOptions = {
-    primaryKey: 'EmployeeId',
-    licenseKey: process.env.REACT_APP_ADAPTABLE_LICENSE_KEY,
-    userName: 'testUserFinsemble',
-    adaptableId: 'FinsembleDemo',
-    plugins: [
-        finance({
-            fdc3Columns: {
-                contactColumns: [
-                    {
-                        columnId: 'Name',
-                        nameColumnId: 'Name',
-                        emailColumnId: 'Email',
-                        intents: ['StartChat', 'ViewContact'],
-                        showBroadcastContextMenu:true
-                    },
-                ],
-                countryColumns: [
-                    {
-                        columnId: 'Country',
-                        nameColumnId: 'Country',
-                        isoalpha3ColumnId: 'CountryCode',
-                        intents: ['ViewChart'],
-                    },
-                ],
-                organizationColumns: [
-                    {
-                        columnId: 'Company',
-                        nameColumnId: 'Company',
-                        intents: ['ViewAnalysis', 'ViewNews'],
-                    },
-                ],
-            },
-        }),
-    ],
-    menuOptions: {
-        // remove some menu items to keep things easier
-        showAdaptableColumnMenu: (menuItem: AdaptableMenuItem) => {
-            return !hiddenContextMenus.includes(menuItem.module as AdaptableModule);
-        },
-        showAdaptableContextMenu: (menuItem: AdaptableMenuItem) => {
-            return !hiddenContextMenus.includes(menuItem.module as AdaptableModule);
-        },
+  primaryKey: 'EmployeeId',
+  licenseKey: process.env.REACT_APP_ADAPTABLE_LICENSE_KEY,
+  userName: 'testUserFinsemble',
+  adaptableId: 'FinsembleDemo',
+  plugins: [
+    finsemblePlugin({
+      availableIntents: ['ViewChart'],
+      onContext: (context, adaptableApi) => {
+        const { type } = context;
+        adaptableApi.systemStatusApi.setInfoSystemStatus(
+          'FDC3 Intent (' + type + ')',
+          JSON.stringify(context)
+        );
+      },
+      onIntent: (intent, context, adaptableApi) => {
+        const { type } = context;
+        adaptableApi.systemStatusApi.setInfoSystemStatus(
+          `FDC3 Intent (${intent}, ${type})`,
+          JSON.stringify(context)
+        );
+      },
+    }),
+    finance({
+      fdc3Columns: {
+        contactColumns: [
+          {
+            columnId: 'Name',
+            nameColumnId: 'Name',
+            emailColumnId: 'Email',
+            intents: ['StartChat', 'ViewContact'],
+            showBroadcastContextMenu: true,
+          },
+        ],
+        countryColumns: [
+          {
+            columnId: 'Country',
+            nameColumnId: 'Country',
+            isoalpha3ColumnId: 'CountryCode',
+            intents: ['ViewChart'],
+          },
+        ],
+        organizationColumns: [
+          {
+            columnId: 'Company',
+            nameColumnId: 'Company',
+            intents: ['ViewAnalysis', 'ViewNews'],
+          },
+        ],
+      },
+    }),
+  ],
+  stateOptions,
+  menuOptions: {
+    // remove some menu items to keep things easier
+    showAdaptableColumnMenu: (menuItem: AdaptableMenuItem) => {
+      return !hiddenContextMenus.includes(menuItem.module as AdaptableModule);
     },
-    predefinedConfig: {
-        Theme:{
-            CurrentTheme:"dark"
-        },
-        Dashboard: {
-            Tabs: [
-                {
-                    Name: 'Demo',
-                    Toolbars: ['SystemStatus'],
-                },
-            ],
-        },
-        Layout: {
-            CurrentLayout: 'Basic Layout',
-            Layouts: [
-                {
-                    Name: 'Basic Layout',
-                    Columns: [
-                        'Name',
-                        'Year',
-                        'Company',
-                        'Country',
-                        'CountryCode',
-                        'Email',
-                        'Rating',
-                    ],
-                },
-            ],
-        },
+    showAdaptableContextMenu: (menuItem: AdaptableMenuItem) => {
+      return !hiddenContextMenus.includes(menuItem.module as AdaptableModule);
     },
+  },
+  predefinedConfig: {
+    Theme: {
+      CurrentTheme: 'dark',
+    },
+    Dashboard: {
+      Tabs: [
+        {
+          Name: 'Demo',
+          Toolbars: ['SystemStatus'],
+        },
+      ],
+    },
+    Layout: {
+      CurrentLayout: 'Basic Layout',
+      Layouts: [
+        {
+          Name: 'Basic Layout',
+          Columns: ['Name', 'Year', 'Company', 'Country', 'CountryCode', 'Email', 'Rating'],
+        },
+      ],
+    },
+  },
 };
 
 const modules = [...AllEnterpriseModules];
 
-export const AdaptableAgGrid = ()=>{
-    const adaptableApiRef = React.useRef<AdaptableApi>();
-    return (
-        <div style={{ display: 'flex', flexFlow: 'column', height: '100vh' }}>
-            <AdaptableReact
-                style={{ flex: 'none' }}
-                gridOptions={gridOptions}
-                adaptableOptions={adaptableOptions}
-                onAdaptableReady={({ adaptableApi }) => {
-                    // save a reference to adaptable api
-                    adaptableApiRef.current = adaptableApi;
-                    console.log('Adaptable ready!');
+export const AdaptableAgGrid = () => {
+  const adaptableApiRef = React.useRef<AdaptableApi>();
+  return (
+    <div style={{ display: 'flex', flexFlow: 'column', height: '100vh' }}>
+      <AdaptableReact
+        style={{ flex: 'none' }}
+        gridOptions={gridOptions}
+        adaptableOptions={adaptableOptions}
+        onAdaptableReady={({ adaptableApi }) => {
+          adaptableApiRef.current = adaptableApi;
+          console.log('Adaptable ready!');
+        }}
+        modules={modules}
+      />
+      <div className="ag-theme-balham" style={{ flex: 1, height: 'calc(100vh - 40px)' }}>
+        <AgGridReact gridOptions={gridOptions} modules={modules} />
+      </div>
+    </div>
+  );
+};
 
-                    const fdc3Api = getFDC3();
-                    fdc3Api?.addIntentListener("ViewChart", (context:any) => {
-                        const { type } = context;
-
-                        console.log(context)
-
-                        adaptableApi.systemStatusApi.setInfoSystemStatus(
-                                    'FDC3 Intent (' + type + ')',
-                                    JSON.stringify(context)
-                                );
-                    })
-
-                    adaptableApi.eventApi.on(
-                        'FDC3MessageSent',
-                        (eventInfo: AdaptableFDC3EventInfo) => {
-                            if (eventInfo.eventType === 'RaiseIntent') {
-                                const fdc3Api = getFDC3();
-                                if(fdc3Api){
-                                    console.log('Raising intent: ',eventInfo.intent, eventInfo.context)
-                                    fdc3Api.raiseIntent(eventInfo.intent, eventInfo.context);
-                                }else{
-                                    console.error('AdapTable: No fdc3 object available!')
-                                }
-                            }
-                        }
-                    );
-                }}
-                modules={modules}
-            />
-            <div className="ag-theme-balham" style={{ flex: 1 , height: 'calc(100vh - 40px)'}}>
-                <AgGridReact gridOptions={gridOptions} modules={modules} />
-            </div>
-        </div>
-    );
-}
-
-
-const getFDC3 = ()=>{
-    return (globalThis as any).fdc3;
-}
+const getFDC3 = () => {
+  return (globalThis as any).fdc3;
+};
