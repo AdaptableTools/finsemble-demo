@@ -4,6 +4,7 @@ import { Context, DesktopAgent } from '@finsemble/finsemble-core/types/typedefs/
 import {
   AdaptableApi,
   AdaptableFDC3EventInfo,
+  AdaptableOptions,
   AlertButton,
   AlertFiredInfo,
   AlertFormContext,
@@ -40,8 +41,19 @@ interface FinsemblePluginOptions {
    */
   onContext?: (context: Context, adaptableApi: AdaptableApi) => void;
 
-  // TODO: use beforeInit to change stateOptions
-  persistInFinsable?: boolean;
+  stateOptions?: {
+    persistInFinsamble: boolean;
+
+    /**
+     * Key used to save/load state in Finsemble.
+     */
+    key: string;
+
+    /**
+     * Topic used to save/load state in Finsemble.
+     */
+    topic: string;
+  };
 
   /**
    * @default true
@@ -59,6 +71,58 @@ class FinsemblePlugin extends AdaptablePlugin {
   constructor(options?: FinsemblePluginOptions) {
     super(options);
     this.options = { ...defaultOptions, ...options };
+  }
+
+  onAdaptableReady(adaptable: IAdaptable) {
+    this.adaptable = adaptable;
+    this.init();
+  }
+
+  beforeInit(adaptableOptions: AdaptableOptions) {
+    if (this.options.stateOptions && this.options.stateOptions?.persistInFinsamble) {
+      this.setupStateOptions(adaptableOptions);
+    }
+  }
+
+  private async init() {
+    await this.waitForFinsambleAndFDC3();
+
+    this.subscribeToFDC3AdaptableMessages();
+    this.listenToContextChange();
+    this.listenToIntents();
+
+    this.integrateAdaptableAlerts();
+  }
+
+  private setupStateOptions(adaptableOptions: AdaptableOptions) {
+    adaptableOptions.stateOptions = {
+      loadState: async () => {
+        if (!this.options.stateOptions) {
+          console.error('StateOptions are not set');
+          return;
+        }
+
+        const StorageClient = FSBL.Clients.StorageClient;
+        const data = await StorageClient.getStandardized({
+          key: this.options.stateOptions.key,
+          topic: this.options.stateOptions.topic,
+        });
+        if (data.err) {
+          return Promise.reject(data.err);
+        } else {
+          return JSON.parse(data.data);
+        }
+      },
+      saveState: async (state) => {
+        const stateStr = JSON.stringify(state);
+        const StorageClient = FSBL.Clients.StorageClient;
+        return StorageClient.save({
+          key: this.options.stateOptions!.key,
+          topic: this.options.stateOptions!.topic,
+          value: stateStr,
+        });
+      },
+    };
   }
 
   async waitForFinsambleAndFDC3() {
@@ -86,23 +150,72 @@ class FinsemblePlugin extends AdaptablePlugin {
     this.finsemble = finsemble;
   }
 
-  onAdaptableReady(adaptable: IAdaptable) {
-    this.adaptable = adaptable;
-    this.init();
-  }
-
-  private async init() {
-    await this.waitForFinsambleAndFDC3();
-
-    this.subscribeToFDC3AdaptableMessages();
-    this.listenToContextChange();
-    this.listenToIntents();
-
-    if (this.options.enableAdaptableAlerts) {
-      this.integrateAdaptableAlerts();
+  private integrateAdaptableAlerts() {
+    if (!this.options.enableAdaptableAlerts) {
+      return;
     }
+
+    const finsamble = this.finsemble!;
+    const adaptable = this.adaptable!;
+
+    this.adaptable?.api.eventApi.on('AlertFired', (alertInfo: AlertFiredInfo) => {
+      const alert = alertInfo.alert;
+      const { alertType, header, message } = alert;
+      const adaptableActions: IAction[] = [];
+
+      if (
+        alert.alertDefinition.AlertForm &&
+        typeof alert.alertDefinition.AlertForm !== 'string' &&
+        Array.isArray(alert.alertDefinition.AlertForm?.Buttons)
+      ) {
+        alert.alertDefinition.AlertForm.Buttons.forEach(
+          async (button: AlertButton<AlertFormContext>) => {
+            const adaptableActionId = `adaptable.action.${button.Label}.${Date.now()}`;
+            const action: IAction = {
+              buttonText: button.Label,
+              type: finsamble.Clients.NotificationClient.ActionTypes.TRANSMIT,
+              channel: adaptableActionId,
+            };
+
+            this.subscribeToAction(adaptableActionId, () => {
+              const context: AlertFormContext = {
+                alert: alert,
+                adaptableApi: adaptable.api,
+                formData: {},
+              };
+              adaptable.api.alertApi.executeAlertButton(button, context);
+            });
+            adaptableActions.push(action);
+          }
+        );
+      }
+
+      finsamble.Clients.NotificationClient.notify({
+        title: header,
+        details: message,
+        source: this.options.applicationName,
+        actions: adaptableActions,
+      });
+
+      // Returning false prevents adaptable from showing the alert notification.
+      return false;
+    });
   }
 
+  private subscribeToAction(action: string, callback: () => void) {
+    const finsamble = this.finsemble!;
+    const { RouterClient, NotificationClient } = finsamble.Clients;
+
+    let unsubscribe = () => {};
+    const handler: ListenerCallback = (error, response) => {
+      callback();
+      unsubscribe();
+    };
+
+    unsubscribe = RouterClient.addListener(action, handler);
+  }
+
+  // FDC3 specific
   private subscribeToFDC3AdaptableMessages() {
     const fdc3 = this.fdc3!;
     this.adaptable?.api.eventApi.on('FDC3MessageSent', (eventInfo: AdaptableFDC3EventInfo) => {
@@ -134,58 +247,6 @@ class FinsemblePlugin extends AdaptablePlugin {
         onContext(context, adaptable!.api);
       });
     }
-  }
-
-  private integrateAdaptableAlerts() {
-    const finsamble = this.finsemble!;
-
-    this.adaptable?.api.eventApi.on('AlertFired', (alertInfo: AlertFiredInfo) => {
-      const alert = alertInfo.alert;
-      const { alertType, header, message } = alert;
-      const adaptableActions: IAction[] = [];
-
-      if (
-        alert.alertDefinition.AlertForm &&
-        typeof alert.alertDefinition.AlertForm !== 'string' &&
-        Array.isArray(alert.alertDefinition.AlertForm?.Buttons)
-      ) {
-        alert.alertDefinition.AlertForm.Buttons.forEach(
-          async (button: AlertButton<AlertFormContext>) => {
-            const adaptableActionId = `adaptable.action.${button.Label}.${Date.now()}`;
-            const action: IAction = {
-              buttonText: button.Label,
-              type: finsamble.Clients.NotificationClient.ActionTypes.TRANSMIT,
-              channel: adaptableActionId,
-            };
-
-            this.subscribeToAction(adaptableActionId, () => {
-              console.log('Alert button clicked', button);
-            });
-            adaptableActions.push(action);
-          }
-        );
-      }
-
-      finsamble.Clients.NotificationClient.notify({
-        title: header,
-        details: message,
-        source: this.options.applicationName,
-        actions: adaptableActions,
-      });
-    });
-  }
-
-  private subscribeToAction(action: string, callback: () => void) {
-    const finsamble = this.finsemble!;
-    const { RouterClient, NotificationClient } = finsamble.Clients;
-
-    let unsubscribe = () => {};
-    const handler: ListenerCallback = (error, response) => {
-      callback();
-      unsubscribe();
-    };
-
-    unsubscribe = RouterClient.addListener(action, handler);
   }
 }
 

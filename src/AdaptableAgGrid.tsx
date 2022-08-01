@@ -73,34 +73,6 @@ const gridOptions: GridOptions = {
   },
 };
 
-const finastraAdaptableStorageTopic = 'finastra.adaptable.storage';
-const finastraAdaptableStorageKey = 'finastra.adaptable.state';
-const stateOptions: AdaptableOptions['stateOptions'] = {
-  loadState: async () => {
-    const StorageClient = FSBL.Clients.StorageClient;
-    const data = await StorageClient.getStandardized({
-      key: finastraAdaptableStorageKey,
-      topic: finastraAdaptableStorageTopic,
-    });
-
-    if (data.err) {
-      return Promise.reject(data.err);
-    } else {
-      return JSON.parse(data.data);
-    }
-  },
-  saveState: async (state) => {
-    const stateStr = JSON.stringify(state);
-    const StorageClient = FSBL.Clients.StorageClient;
-
-    return StorageClient.save({
-      key: finastraAdaptableStorageKey,
-      topic: finastraAdaptableStorageTopic,
-      value: stateStr,
-    });
-  },
-};
-
 // build the AdaptableOptions object
 // in this example we are NOT passing in predefined config but in the real world you will ship the AdapTable with objects and permissions
 const adaptableOptions: AdaptableOptions = {
@@ -110,6 +82,7 @@ const adaptableOptions: AdaptableOptions = {
   adaptableId: 'FinsembleDemo',
   plugins: [
     finsemblePlugin({
+      // FDC3 specific
       availableIntents: ['ViewChart'],
       onContext: (context, adaptableApi) => {
         const { type } = context;
@@ -124,6 +97,11 @@ const adaptableOptions: AdaptableOptions = {
           `FDC3 Intent (${intent}, ${type})`,
           JSON.stringify(context)
         );
+      },
+      stateOptions: {
+        persistInFinsamble: true,
+        key: 'finastra.adaptable.storage',
+        topic: 'finastra.adaptable.topic',
       },
     }),
     finance({
@@ -155,7 +133,7 @@ const adaptableOptions: AdaptableOptions = {
       },
     }),
   ],
-  stateOptions,
+
   menuOptions: {
     // remove some menu items to keep things easier
     showAdaptableColumnMenu: (menuItem: AdaptableMenuItem) => {
