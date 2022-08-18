@@ -17,7 +17,7 @@ import { IAction } from '@finsemble/finsemble-core/types/services/notification/t
 
 const defaultOptions: FinsemblePluginOptions = {
   availableIntents: [],
-  enableAdaptableAlerts: true,
+  showAdaptableAlertsAsNotifications: true,
   applicationName: 'Adaptable',
 };
 
@@ -58,7 +58,7 @@ interface FinsemblePluginOptions {
   /**
    * @default true
    */
-  enableAdaptableAlerts?: boolean;
+  showAdaptableAlertsAsNotifications?: boolean;
 }
 
 class FinsemblePlugin extends AdaptablePlugin {
@@ -151,7 +151,7 @@ class FinsemblePlugin extends AdaptablePlugin {
   }
 
   private integrateAdaptableAlerts() {
-    if (!this.options.enableAdaptableAlerts) {
+    if (!this.options.showAdaptableAlertsAsNotifications) {
       return;
     }
 

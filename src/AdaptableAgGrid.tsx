@@ -98,6 +98,8 @@ const adaptableOptions: AdaptableOptions = {
           JSON.stringify(context)
         );
       },
+
+      showAdaptableAlertsAsNotifications: true,
       stateOptions: {
         persistInFinsamble: true,
         key: 'finastra.adaptable.storage',
