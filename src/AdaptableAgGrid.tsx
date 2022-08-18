@@ -87,7 +87,7 @@ const adaptableOptions: AdaptableOptions = {
       onContext: (context, adaptableApi) => {
         const { type } = context;
         adaptableApi.systemStatusApi.setInfoSystemStatus(
-          'FDC3 Intent (' + type + ')',
+          'FDC3 Context (' + type + ')',
           JSON.stringify(context)
         );
       },
