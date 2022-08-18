@@ -42,7 +42,7 @@ interface FinsemblePluginOptions {
   onContext?: (context: Context, adaptableApi: AdaptableApi) => void;
 
   stateOptions?: {
-    persistInFinsamble: boolean;
+    persistInFinsemble: boolean;
 
     /**
      * Key used to save/load state in Finsemble.
@@ -79,7 +79,7 @@ class FinsemblePlugin extends AdaptablePlugin {
   }
 
   beforeInit(adaptableOptions: AdaptableOptions) {
-    if (this.options.stateOptions && this.options.stateOptions?.persistInFinsamble) {
+    if (this.options.stateOptions && this.options.stateOptions?.persistInFinsemble) {
       this.setupStateOptions(adaptableOptions);
     }
   }

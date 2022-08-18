@@ -101,9 +101,9 @@ const adaptableOptions: AdaptableOptions = {
 
       showAdaptableAlertsAsNotifications: true,
       stateOptions: {
-        persistInFinsamble: true,
-        key: 'finastra.adaptable.storage',
-        topic: 'finastra.adaptable.topic',
+        persistInFinsemble: true,
+        key: 'finsemble.adaptable.storage',
+        topic: 'finsemble.adaptable.topic',
       },
     }),
     finance({
