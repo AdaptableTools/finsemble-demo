@@ -9,7 +9,7 @@ const DEFAULT_CONFIG: Required<DataGeneratorConfig> = {
   maxMarketPricePercentageVariation: 5,
   marketPriceVariationIntervalInSeconds: 5,
   enableContinuousTradeGeneration: true,
-  tradeGenerationIntervalInSeconds: 20,
+  tradeGenerationIntervalInSeconds: 10,
 };
 
 export class TradeDataGenerator {
