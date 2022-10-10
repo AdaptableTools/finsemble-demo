@@ -2,30 +2,23 @@ import * as React from 'react';
 // import Adaptable Component and other types
 import AdaptableReact, {
     AdaptableOptions,
-    AdaptableApi, AdaptableModule, AdaptableMenuItem, AdaptableFDC3EventInfo,
+    AdaptableApi,
+    AdaptableModule,
+    AdaptableMenuItem,
+    AdaptableFDC3EventInfo,
+    FinsemblePluginOptions,
+    FinancePluginOptions,
 } from '@adaptabletools/adaptable-react-aggrid';
 
 // import agGrid Component
 import { AgGridReact } from '@ag-grid-community/react';
 
-// import adaptable css and themes
-import '@adaptabletools/adaptable-react-aggrid/base.css';
-import '@adaptabletools/adaptable-react-aggrid/themes/light.css';
-import '@adaptabletools/adaptable-react-aggrid/themes/dark.css';
+import {RECOMMENDED_MODULES} from "./agGridModules";
 
-// import aggrid themes (using new Balham theme)
-import '@ag-grid-community/all-modules/dist/styles/ag-grid.css';
-import '@ag-grid-community/all-modules/dist/styles/ag-theme-alpine.css';
-import '@ag-grid-community/all-modules/dist/styles/ag-theme-alpine-dark.css';
-
-import {
-    AllEnterpriseModules,
-    GridOptions,
-} from '@ag-grid-enterprise/all-modules';
-
-import {columnDefs} from "./columnDefs";
-import {rowData} from "./rowData";
 import finance from '@adaptabletools/adaptable-plugin-finance';
+import finsemble from '@adaptabletools/adaptable-plugin-finsemble';
+
+import {TradeDataGenerator} from "./TradeDataGenerator";
 
 const hiddenContextMenus: AdaptableModule[] = [
     'CellSummary',
@@ -43,69 +36,64 @@ const hiddenContextMenus: AdaptableModule[] = [
 ];
 
 // let ag-grid know which columns and what data to use and add some other properties
-const gridOptions: GridOptions = {
-    defaultColDef: {
-        resizable: true,
-        enableRowGroup: true,
-        sortable: true,
-        editable: true,
-        filter: true,
-        floatingFilter: true,
+const gridOptions = TradeDataGenerator.getGridOptions();
+
+const finsembleOptions: FinsemblePluginOptions = {
+    stateOptions: {
+        persistInFinsemble: false,
+        key: 'local-finsemble-state-key',
+        topic: 'local-finsemble-state-topic',
     },
-    columnDefs: columnDefs,
-    rowData: rowData,
-    sideBar: true,
-    suppressMenuHide: true,
-    enableRangeSelection: true,
-    statusBar: {
-        statusPanels: [
-            {statusPanel: 'agTotalRowCountComponent', align: 'left'},
-            {statusPanel: 'agFilteredRowCountComponent'},
+    showAdaptableAlertsAsNotifications: true,
+};
+
+const financeOptions:FinancePluginOptions = {
+    fdc3Columns: {
+        contactColumns: [
             {
-                key: 'Center Panel',
-                statusPanel: 'AdaptableStatusPanel',
-                align: 'center',
+                columnId: 'lastUpdatedBy',
+                nameColumnId: 'Last Updated By',
+                intents: ['StartChat', 'ViewContact'],
+                showBroadcastContextMenu: true,
+            },
+        ],
+
+        instrumentColumns: [
+            {
+                columnId: 'ticker',
+                nameColumnId: 'Ticker AFL',
+                intents: ['ViewChart'],
+                showBroadcastContextMenu: true,
             },
         ],
     },
-};
+    availableFDC3Intents: ['ViewChart'],
+    onFDC3Intent: (intent: any, context, adaptableApi) => {
+        const { type } = context;
+        adaptableApi.systemStatusApi.setInfoSystemStatus(
+            `FDC3 Intent (${intent}, ${type})`,
+            JSON.stringify(context)
+        );
+    },
+    onFDC3Context: (context, adaptableApi) => {
+        const { type } = context;
+        adaptableApi.systemStatusApi.setInfoSystemStatus(
+            'FDC3 Context (' + type + ')',
+            JSON.stringify(context)
+        );
+    },
+}
 
 // build the AdaptableOptions object
 // in this example we are NOT passing in predefined config but in the real world you will ship the AdapTable with objects and permissions
 const adaptableOptions: AdaptableOptions = {
-    primaryKey: 'EmployeeId',
+    primaryKey: 'tradeId',
     licenseKey: process.env.REACT_APP_ADAPTABLE_LICENSE_KEY,
-    userName: 'testUserFinsemble',
-    adaptableId: 'FinsembleDemo',
+    userName: 'TestUserFinsemble',
+    adaptableId: 'finsemble-adaptable-demo',
     plugins: [
-        finance({
-            fdc3Columns: {
-                contactColumns: [
-                    {
-                        columnId: 'Name',
-                        nameColumnId: 'Name',
-                        emailColumnId: 'Email',
-                        intents: ['StartChat', 'ViewContact'],
-                        showBroadcastContextMenu:true
-                    },
-                ],
-                countryColumns: [
-                    {
-                        columnId: 'Country',
-                        nameColumnId: 'Country',
-                        isoalpha3ColumnId: 'CountryCode',
-                        intents: ['ViewChart'],
-                    },
-                ],
-                organizationColumns: [
-                    {
-                        columnId: 'Company',
-                        nameColumnId: 'Company',
-                        intents: ['ViewAnalysis', 'ViewNews'],
-                    },
-                ],
-            },
-        }),
+        finance(financeOptions),
+        finsemble(finsembleOptions)
     ],
     menuOptions: {
         // remove some menu items to keep things easier
@@ -124,31 +112,29 @@ const adaptableOptions: AdaptableOptions = {
             Tabs: [
                 {
                     Name: 'Demo',
-                    Toolbars: ['SystemStatus'],
+                    Toolbars: ['SystemStatus', 'Layout'],
                 },
             ],
         },
-        Layout: {
-            CurrentLayout: 'Basic Layout',
-            Layouts: [
+        FormatColumn: {
+            FormatColumns: [
                 {
-                    Name: 'Basic Layout',
-                    Columns: [
-                        'Name',
-                        'Year',
-                        'Company',
-                        'Country',
-                        'CountryCode',
-                        'Email',
-                        'Rating',
-                    ],
+                    Scope: {
+                        DataTypes: ['Date'],
+                    },
+                    DisplayFormat: {
+                        Formatter: 'DateFormatter',
+                        Options: {
+                            Pattern: 'yyyy-MM-dd',
+                        },
+                    },
                 },
             ],
         },
     },
 };
 
-const modules = [...AllEnterpriseModules];
+const modules = RECOMMENDED_MODULES;
 
 export const AdaptableAgGrid = ()=>{
     const adaptableApiRef = React.useRef<AdaptableApi>();
@@ -161,7 +147,10 @@ export const AdaptableAgGrid = ()=>{
                 onAdaptableReady={({ adaptableApi }) => {
                     // save a reference to adaptable api
                     adaptableApiRef.current = adaptableApi;
-                    console.log('Adaptable ready!');
+
+                    const tradeDataGenerator = TradeDataGenerator.initialize(adaptableApi);
+
+                    const finsembleApi = adaptableApi.pluginsApi.getFinsemblePluginApi();
 
                     const fdc3Api = getFDC3();
                     fdc3Api?.addIntentListener("ViewChart", (context:any) => {
@@ -190,9 +179,8 @@ export const AdaptableAgGrid = ()=>{
                         }
                     );
                 }}
-                modules={modules}
             />
-            <div className="ag-theme-balham" style={{ flex: 1 , height: 'calc(100vh - 40px)'}}>
+            <div className="ag-theme-alpine" style={{ flex: 1 , height: 'calc(100vh - 40px)'}}>
                 <AgGridReact gridOptions={gridOptions} modules={modules} />
             </div>
         </div>
