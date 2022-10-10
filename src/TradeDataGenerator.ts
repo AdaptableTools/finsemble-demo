@@ -7,7 +7,7 @@ const DEFAULT_CONFIG: Required<DataGeneratorConfig> = {
   maxUnitPricePercentageDeviation: 10,
   enableMarketPriceVariation: true,
   maxMarketPricePercentageVariation: 5,
-  marketPriceVariationIntervalInSeconds: 5,
+  marketPriceVariationIntervalInSeconds: 1,
   enableContinuousTradeGeneration: true,
   tradeGenerationIntervalInSeconds: 10,
 };
@@ -69,13 +69,13 @@ export class TradeDataGenerator {
   }
 
   static getGridOptions(): GridOptions {
-    return {
+    const options: GridOptions = {
       defaultColDef: {
         filter: true,
         floatingFilter: true,
         sortable: true,
         resizable: true,
-        editable: true,
+        editable: false,
       },
       columnDefs: this.getColDefs(),
       enableRangeSelection: true,
@@ -89,15 +89,21 @@ export class TradeDataGenerator {
       statusBar: {
         statusPanels: [
           { statusPanel: 'agTotalRowCountComponent', align: 'left' },
-          { statusPanel: 'agFilteredRowCountComponent' },
+          { statusPanel: 'agFilteredRowCountComponent', align: 'left' },
           {
             key: 'Center Panel',
             statusPanel: 'AdaptableStatusPanel',
             align: 'center',
           },
+          {
+            key: 'Right Panel',
+            statusPanel: 'AdaptableStatusPanel',
+            align: 'right',
+          },
         ],
       },
     };
+    return options;
   }
 
   private static getColDefs(): ColDef[] {
@@ -138,7 +144,7 @@ export class TradeDataGenerator {
       type: 'abColDefDate',
     });
     schema.push({
-      headerName: 'Buy/Sell',
+      headerName: 'B/S',
       field: 'direction',
       enableRowGroup: true,
       type: ['abColDefString'],
@@ -167,7 +173,7 @@ export class TradeDataGenerator {
       type: ['abColDefString'],
     });
     schema.push({
-      headerName: 'Currency',
+      headerName: 'CCY',
       field: 'currency',
       enableRowGroup: true,
       type: ['abColDefString'],

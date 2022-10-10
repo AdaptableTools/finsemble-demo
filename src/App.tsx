@@ -7,18 +7,18 @@ import '@adaptabletools/adaptable-react-aggrid/themes/dark.css';
 
 // import aggrid themes (using new Alpine theme)
 import '@ag-grid-community/core/dist/styles/ag-grid.css';
-import '@ag-grid-community/core/dist/styles/ag-theme-alpine.css';
-import '@ag-grid-community/core/dist/styles/ag-theme-alpine-dark.css';
+import '@ag-grid-community/core/dist/styles/ag-theme-balham.css';
+import '@ag-grid-community/core/dist/styles/ag-theme-balham-dark.css';
 
 import './App.css';
 
-import {AdaptableAgGrid} from "./AdaptableAgGrid";
+import { AdaptableAgGrid } from './AdaptableAgGrid';
 
 function App() {
   return (
-      <div className="App">
-        <AdaptableAgGrid />
-      </div>
+    <div className="App">
+      <AdaptableAgGrid />
+    </div>
   );
 }
 

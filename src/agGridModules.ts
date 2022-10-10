@@ -28,4 +28,3 @@ export const RECOMMENDED_MODULES: Module[] = [
   RowGroupingModule,
   ClipboardModule,
 ];
-
