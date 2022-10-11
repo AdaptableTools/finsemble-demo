@@ -10,6 +10,7 @@ import AdaptableReact, {
   FinancePluginOptions,
   DashboardButtonContext,
   AdaptableButton,
+  ActionColumnContext,
 } from '@adaptabletools/adaptable-react-aggrid';
 
 // import agGrid Component
@@ -111,7 +112,67 @@ const adaptableOptions: AdaptableOptions = {
   },
   actionOptions: {
     actionRowButtons: ['edit'],
-    // actionColumns: [],
+    actionColumns: [
+      {
+        columnId: 'changeStatus',
+        // leave whitespace!!
+        friendlyName: ' ',
+        actionColumnButton: [
+          {
+            icon: {
+              name: 'clear',
+            },
+            tooltip: 'Reject',
+            hidden: (
+              button: AdaptableButton<ActionColumnContext>,
+              context: ActionColumnContext
+            ) => {
+              return context.rowNode?.data?.status !== 'In Progress';
+            },
+            onClick: (
+              button: AdaptableButton<ActionColumnContext>,
+              context: ActionColumnContext
+            ) => {
+              context.adaptableApi.gridApi.setCellValue(
+                'status',
+                'Rejected',
+                context.primaryKeyValue
+              );
+            },
+            buttonStyle: {
+              variant: 'outlined',
+              tone: 'warning',
+            },
+          },
+          {
+            icon: {
+              name: 'check',
+            },
+            tooltip: 'Complete',
+            hidden: (
+              button: AdaptableButton<ActionColumnContext>,
+              context: ActionColumnContext
+            ) => {
+              return context.rowNode?.data?.status !== 'In Progress';
+            },
+            onClick: (
+              button: AdaptableButton<ActionColumnContext>,
+              context: ActionColumnContext
+            ) => {
+              context.adaptableApi.gridApi.setCellValue(
+                'status',
+                'Completed',
+                context.primaryKeyValue
+              );
+            },
+            buttonStyle: {
+              variant: 'outlined',
+              tone: 'success',
+            },
+          },
+        ],
+      },
+    ],
   },
   exportOptions: {
     appendFileTimestamp: true,
@@ -128,6 +189,15 @@ const adaptableOptions: AdaptableOptions = {
             buttonStyle: {
               variant: 'raised',
               tone: 'accent',
+            },
+            hidden: (
+              button: AdaptableButton<CustomToolbarButtonContext>,
+              context: CustomToolbarButtonContext
+            ) => {
+              return (
+                context.adaptableApi.filterApi.getColumnFilter('user')?.Predicate?.PredicateId ===
+                'currentUser'
+              );
             },
             onClick: (
               button: AdaptableButton<CustomToolbarButtonContext>,
@@ -148,7 +218,13 @@ const adaptableOptions: AdaptableOptions = {
             label: 'Show all trades',
             buttonStyle: {
               variant: 'outlined',
-              tone: 'none',
+              tone: 'accent',
+            },
+            hidden: (
+              button: AdaptableButton<CustomToolbarButtonContext>,
+              context: CustomToolbarButtonContext
+            ) => {
+              return !context.adaptableApi.filterApi.getColumnFilter('user');
             },
             onClick: (
               button: AdaptableButton<CustomToolbarButtonContext>,
@@ -223,6 +299,7 @@ const adaptableOptions: AdaptableOptions = {
         'QuickSearch',
         'Schedule',
         'Shortcut',
+        'StyledColumn',
         '-',
         'GridInfo',
         'SystemStatus',
@@ -234,9 +311,11 @@ const adaptableOptions: AdaptableOptions = {
   },
   predefinedConfig: {
     Theme: {
+      Revision: Date.now(),
       CurrentTheme: 'dark',
     },
     StatusBar: {
+      Revision: Date.now(),
       StatusBars: [
         {
           Key: 'Center Panel',
@@ -249,6 +328,7 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     Export: {
+      Revision: Date.now(),
       Reports: [
         {
           Name: 'My Live Trades',
@@ -275,8 +355,11 @@ const adaptableOptions: AdaptableOptions = {
           },
         },
       ],
+      CurrentReport: 'My Live Trades',
+      CurrentDestination: 'Excel',
     },
     Dashboard: {
+      Revision: Date.now(),
       DashboardTitle: 'AdapTable',
       Tabs: [
         {
@@ -286,10 +369,11 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     Layout: {
-      CurrentLayout: 'Extended Layout',
+      Revision: Date.now(),
+      CurrentLayout: 'Trade View',
       Layouts: [
         {
-          Name: 'Extended Layout',
+          Name: 'Trade View',
           Columns: [
             'tradeId',
             'user',
@@ -297,81 +381,78 @@ const adaptableOptions: AdaptableOptions = {
             'ticker',
             'cusip',
             'description',
+            'status',
+            'changeStatus',
+            'marketPrice',
+            'pnl',
+            'position',
+            'totalPrice',
+            'fill',
             'clientName',
             'book',
+            'currency',
+            'rating',
+            'tradeDate',
+            'settlementDate',
+
+            // 'quantity',
+            // 'unitPrice',
+            // 'commission',
+            // 'fees',
+          ],
+        },
+        {
+          Name: 'Price View',
+          Columns: [
+            'tradeId',
+            'user',
+            'direction',
+            'ticker',
+            // 'cusip',
+            // 'description',
+            'clientName',
+            'book',
+            // 'rating',
             'tradeDate',
             'settlementDate',
             'status',
-            'currency',
-            'rating',
+            // 'currency',
+            'marketPrice',
+            'pnl',
+            'position',
             'totalPrice',
             'quantity',
             'unitPrice',
             'commission',
             'fees',
+          ],
+        },
+        {
+          Name: 'User View',
+          Columns: [
+            'tradeId',
+            // 'user',
+            'direction',
+            // 'ticker',
+            // 'cusip',
+            // 'description',
+            'clientName',
+            'book',
+            'rating',
+            'tradeDate',
+            'settlementDate',
+            'status',
+            'currency',
             'marketPrice',
             'pnl',
             'position',
-          ],
-        },
-        {
-          Name: 'Condensed Layout',
-          Columns: [
-            'tradeId',
-            'user',
-            'direction',
-            'ticker',
-            'clientName',
-            'book',
-            'tradeDate',
-            'status',
-            'currency',
+            'totalPrice',
             'quantity',
             'unitPrice',
             'commission',
             'fees',
-            'marketPrice',
           ],
-        },
-        {
-          Name: 'Grouped by User',
-          Columns: [
-            'tradeId',
-            'user',
-            'direction',
-            'ticker',
-            'clientName',
-            'book',
-            'tradeDate',
-            'status',
-            'currency',
-            'quantity',
-            'unitPrice',
-            'commission',
-            'fees',
-            'marketPrice',
-          ],
-          RowGroupedColumns: ['user'],
-        },
-        {
-          Name: 'Grouped by Ticker',
-          Columns: [
-            'tradeId',
-            'user',
-            'direction',
-            'ticker',
-            'clientName',
-            'book',
-            'tradeDate',
-            'status',
-            'currency',
-            'quantity',
-            'unitPrice',
-            'commission',
-            'fees',
-            'marketPrice',
-          ],
-          RowGroupedColumns: ['ticker'],
+          RowGroupedColumns: ['user', 'ticker'],
         },
         {
           Name: 'Pivot View',
@@ -388,6 +469,7 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     Alert: {
+      Revision: Date.now(),
       AlertDefinitions: [
         {
           Scope: {
@@ -425,6 +507,7 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     FlashingCell: {
+      Revision: Date.now(),
       FlashingCellDefinitions: [
         {
           Scope: {
@@ -452,6 +535,7 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     FormatColumn: {
+      Revision: Date.now(),
       FormatColumns: [
         {
           Scope: {
@@ -518,9 +602,22 @@ const adaptableOptions: AdaptableOptions = {
             },
           },
         },
+        {
+          Scope: {
+            All: true,
+          },
+          Style: {
+            ForeColor: '#969696',
+            FontStyle: 'Italic',
+          },
+          Rule: {
+            BooleanExpression: "[status] = 'Rejected'",
+          },
+        },
       ],
     },
     CalculatedColumn: {
+      Revision: Date.now(),
       CalculatedColumns: [
         {
           ColumnId: 'totalPrice',
@@ -541,10 +638,28 @@ const adaptableOptions: AdaptableOptions = {
           FriendlyName: 'Total Price',
         },
         {
+          ColumnId: 'netPrice',
+          Query: {
+            ScalarExpression: '[quantity] * [unitPrice]',
+          },
+          CalculatedColumnSettings: {
+            DataType: 'Number',
+            Filterable: true,
+            Resizable: true,
+            Groupable: true,
+            Sortable: true,
+            Pivotable: false,
+            Aggregatable: true,
+            SuppressMenu: false,
+            SuppressMovable: false,
+          },
+          FriendlyName: 'Net Price',
+        },
+        {
           ColumnId: 'pnl',
           FriendlyName: 'PnL',
           Query: {
-            ScalarExpression: '([unitPrice] * [quantity] ) - ([marketPrice] * [quantity])',
+            ScalarExpression: `[direction] = 'Buy' ? [netPrice] - ([marketPrice] * [quantity]) : [netPrice]  + ([marketPrice] * [quantity])`,
           },
           CalculatedColumnSettings: {
             DataType: 'Number',
@@ -575,6 +690,36 @@ const adaptableOptions: AdaptableOptions = {
             SuppressMovable: false,
           },
           FriendlyName: 'Position',
+        },
+      ],
+    },
+    StyledColumn: {
+      Revision: Date.now(),
+      StyledColumns: [
+        {
+          ColumnId: 'totalPrice',
+          GradientStyle: {
+            CellRanges: [
+              {
+                Min: 'Col-Min',
+                Max: 'Col-Max',
+                Color: '#a52a2a',
+              },
+            ],
+          },
+        },
+        {
+          ColumnId: 'fill',
+          PercentBarStyle: {
+            CellRanges: [
+              {
+                Min: 0,
+                Max: 100,
+                Color: '#006400',
+              },
+            ],
+            CellText: ['PercentageValue'],
+          },
         },
       ],
     },

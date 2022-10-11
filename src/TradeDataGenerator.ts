@@ -2,14 +2,14 @@ import { ColDef, GridOptions, RowNode } from '@ag-grid-community/core';
 import { AdaptableApi } from '@adaptabletools/adaptable/src/Api/AdaptableApi';
 
 const DEFAULT_CONFIG: Required<DataGeneratorConfig> = {
-  initialTradesNumber: 100,
+  initialTradesNumber: 400,
   tradeCounterStart: 11234,
   maxUnitPricePercentageDeviation: 10,
   enableMarketPriceVariation: true,
   maxMarketPricePercentageVariation: 5,
   marketPriceVariationIntervalInSeconds: 1,
   enableContinuousTradeGeneration: true,
-  tradeGenerationIntervalInSeconds: 5,
+  tradeGenerationIntervalInSeconds: 15,
 };
 
 export class TradeDataGenerator {
@@ -42,7 +42,7 @@ export class TradeDataGenerator {
     // generate new trade on a given interval
     if (config.enableContinuousTradeGeneration && config.tradeGenerationIntervalInSeconds > 0) {
       setInterval(() => {
-        const newTrade = generator.generateTrade();
+        const newTrade = generator.generateTrade({ tradeDateToday: true });
         adaptableApi.gridApi.addGridData([newTrade], { addIndex: 0 });
       }, config.tradeGenerationIntervalInSeconds * 1000);
     }
@@ -223,15 +223,20 @@ export class TradeDataGenerator {
       enableValue: true,
       type: ['abColDefNumber'],
     });
+    schema.push({
+      headerName: 'Fill',
+      field: 'fill',
+      type: ['abColDefNumber'],
+    });
     return schema;
   }
 
-  generateTrade(): Trade {
+  generateTrade(config?: { tradeDateToday?: boolean }): Trade {
     const counter = this.state.currentCounter + 1;
 
     const instrument = this.pickRandomInstrument();
-    const tradeDate = this.getRandomDate(-50, -1);
-    const settlementDate = this.addDays(tradeDate, this.getRandomInt(15, 40));
+    const tradeDate = config?.tradeDateToday ? new Date() : this.getRandomDate(-50, -1);
+    const settlementDate = this.addDays(tradeDate, this.getRandomInt(25, 40));
     const direction = this.getRandomBoolean() ? 'Buy' : 'Sell';
     const marketPrice = instrument.marketPrice;
 
@@ -241,6 +246,8 @@ export class TradeDataGenerator {
       ? marketPrice - unitPriceDeltaValue
       : marketPrice + unitPriceDeltaValue;
 
+    const status = config?.tradeDateToday ? 'In Progress' : this.getTradeStatus(settlementDate);
+
     const tradeItem: Trade = {
       tradeId: `${counter}-${instrument.ticker}-${direction === 'Buy' ? 'B' : 'S'}`,
       user: this.pickRandomElement(this.getTraderData()),
@@ -249,18 +256,20 @@ export class TradeDataGenerator {
       tradeDate,
       settlementDate,
       direction,
-      status: this.getTradeStatus(settlementDate),
+      status,
       ticker: instrument.ticker,
       cusip: instrument.cusip,
       description: instrument.instrument,
       currency: this.pickRandomElement(this.getCurrencyData()),
-      quantity: this.getRandomInt(55, 130),
+      quantity: this.getRandomInt(2, 5),
       unitPrice,
       marketPrice,
 
       commission: this.getMeaningfulDoubleInRange(0.1, 0.35),
-      fees: this.getMeaningfulDoubleInRange(10, 150),
+      fees: this.getMeaningfulDoubleInRange(5, 30),
       rating: this.pickRandomElement(this.getMoodysRatingData()),
+
+      fill: status === 'Completed' ? 100 : this.getRandomInt(8, 95),
     };
 
     // update the state
@@ -304,7 +313,7 @@ export class TradeDataGenerator {
       return 'Completed';
     }
 
-    const randomNumber = this.getRandomInt(1, 4);
+    const randomNumber = this.getRandomInt(1, 7);
     if (randomNumber == 1) {
       return 'Rejected';
     }
@@ -482,6 +491,7 @@ const INSTRUMENT_DATA: Record<string, InstrumentInfo> = {
 export const CURRENT_USER = 'Finsemble Demo User';
 
 const TRADERS_DATA = [
+  CURRENT_USER,
   'Stacee Dreiling',
   'Cecil Staab',
   'Gertrude Dowdy',
@@ -491,9 +501,8 @@ const TRADERS_DATA = [
   'Magen Willison',
   'Casimira Tabler',
   'Germanine Rybicki',
-  'Granville Westfall',
-  'Colby Troupe',
-  CURRENT_USER,
+  // 'Granville Westfall',
+  // 'Colby Troupe',
   // 'Gerry Frith',
   // 'Sarai Pilgrim',
   // 'Yael Rich',
@@ -598,6 +607,7 @@ export interface Trade {
   fees: number;
   rating: string;
   marketPrice: number;
+  fill: number;
 }
 
 export type TradeStatus = 'Completed' | 'Rejected' | 'In Progress';
