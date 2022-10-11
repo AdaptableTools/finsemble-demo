@@ -1,16 +1,15 @@
 import * as React from 'react';
 // import Adaptable Component and other types
 import AdaptableReact, {
-  AdaptableOptions,
-  AdaptableApi,
-  AdaptableModule,
-  AdaptableMenuItem,
-  AdaptableFDC3EventInfo,
-  FinsemblePluginOptions,
-  FinancePluginOptions,
-  DashboardButtonContext,
-  AdaptableButton,
   ActionColumnContext,
+  AdaptableApi,
+  AdaptableButton,
+  AdaptableFDC3EventInfo,
+  AdaptableMenuItem,
+  AdaptableModule,
+  AdaptableOptions,
+  FinancePluginOptions,
+  FinsemblePluginOptions,
 } from '@adaptabletools/adaptable-react-aggrid';
 
 // import agGrid Component
@@ -45,6 +44,8 @@ const hiddenContextMenus: AdaptableModule[] = [
 
 // let ag-grid know which columns and what data to use and add some other properties
 const gridOptions = TradeDataGenerator.getGridOptions();
+
+const STATE_REVISION = 1665498873204;
 
 const finsembleOptions: FinsemblePluginOptions = {
   stateOptions: {
@@ -371,11 +372,11 @@ const adaptableOptions: AdaptableOptions = {
   },
   predefinedConfig: {
     Theme: {
-      Revision: Date.now(),
+      Revision: STATE_REVISION,
       CurrentTheme: 'dark',
     },
     StatusBar: {
-      Revision: Date.now(),
+      Revision: STATE_REVISION,
       StatusBars: [
         {
           Key: 'Center Panel',
@@ -388,7 +389,7 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     Export: {
-      Revision: Date.now(),
+      Revision: STATE_REVISION,
       Reports: [
         {
           Name: 'My Live Trades',
@@ -420,7 +421,7 @@ const adaptableOptions: AdaptableOptions = {
       CurrentDestination: 'Excel',
     },
     Dashboard: {
-      Revision: Date.now(),
+      Revision: STATE_REVISION,
       DashboardTitle: 'AdapTable',
       Tabs: [
         {
@@ -434,7 +435,7 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     Layout: {
-      Revision: Date.now(),
+      Revision: STATE_REVISION,
       CurrentLayout: 'Trade View',
       Layouts: [
         {
@@ -534,7 +535,7 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     Alert: {
-      Revision: Date.now(),
+      Revision: STATE_REVISION,
       AlertDefinitions: [
         {
           Scope: {
@@ -555,7 +556,7 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     FlashingCell: {
-      Revision: Date.now(),
+      Revision: STATE_REVISION,
       FlashingCellDefinitions: [
         {
           Scope: {
@@ -583,7 +584,7 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     FormatColumn: {
-      Revision: Date.now(),
+      Revision: STATE_REVISION,
       FormatColumns: [
         {
           Scope: {
@@ -665,7 +666,7 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     CalculatedColumn: {
-      Revision: Date.now(),
+      Revision: STATE_REVISION,
       CalculatedColumns: [
         {
           ColumnId: 'totalPrice',
@@ -742,7 +743,7 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     StyledColumn: {
-      Revision: Date.now(),
+      Revision: STATE_REVISION,
       StyledColumns: [
         {
           ColumnId: 'totalPrice',
@@ -772,6 +773,7 @@ const adaptableOptions: AdaptableOptions = {
       ],
     },
     Query: {
+      Revision: STATE_REVISION,
       NamedQueries: [
         {
           Name: 'Live $ Trades',
@@ -797,11 +799,12 @@ export const AdaptableAgGrid = () => {
         style={{ flex: 'none' }}
         gridOptions={gridOptions}
         adaptableOptions={adaptableOptions}
-        onAdaptableReady={({ adaptableApi }) => {
+        onAdaptableReady={({ adaptableApi, gridOptions }) => {
           // save a reference to adaptable api
           adaptableApiRef.current = adaptableApi;
 
           const tradeDataGenerator = TradeDataGenerator.initialize(adaptableApi);
+          gridOptions.columnApi?.autoSizeAllColumns(true);
 
           adaptableApi.eventApi.on('FDC3MessageSent', (eventInfo: AdaptableFDC3EventInfo) => {
             if (eventInfo.eventType === 'BroadcastMessage') {
