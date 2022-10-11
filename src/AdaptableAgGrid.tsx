@@ -45,7 +45,7 @@ const hiddenContextMenus: AdaptableModule[] = [
 // let ag-grid know which columns and what data to use and add some other properties
 const gridOptions = TradeDataGenerator.getGridOptions();
 
-const STATE_REVISION = 1665498873204;
+const STATE_REVISION = 1665498873205;
 
 const finsembleOptions: FinsemblePluginOptions = {
   stateOptions: {
@@ -238,62 +238,21 @@ const adaptableOptions: AdaptableOptions = {
     closeWhenClicked: true,
   },
   alertOptions: {
-    alertForms: [
+    actionHandlers: [
       {
-        name: 'newTradeAlertForm',
-        form: {
-          buttons: [
-            {
-              label: 'Show Me',
-              buttonStyle: {
-                variant: 'raised',
-                tone: 'info',
-              },
-              onClick: (button, context) => {
-                const addedRowNode = (context.alert as AdaptableRowChangedAlert).gridDataChangedInfo
-                  ?.rowNodes?.[0];
-                if (addedRowNode) {
-                  const primaryKeyValue =
-                    context.adaptableApi.gridApi.getPrimaryKeyValueForRowNode(addedRowNode);
-                  const info: RowHighlightInfo = {
-                    primaryKeyValue,
-                    timeout: 2000,
-                    highlightStyle: {
-                      BackColor: `var(--ab-color-info)`,
-                    },
-                  };
-                  context.adaptableApi.gridApi.highlightRow(info);
-                  context.adaptableApi.gridApi.jumpToRow(primaryKeyValue);
-                }
-              },
-            },
-            {
-              label: 'Assign to Me',
-              buttonStyle: {
-                variant: 'raised',
-                tone: 'success',
-              },
-              onClick: (button, context) => {
-                const addedRowNode = (context.alert as AdaptableRowChangedAlert).gridDataChangedInfo
-                  ?.rowNodes?.[0];
-                if (addedRowNode) {
-                  const primaryKeyValue =
-                    context.adaptableApi.gridApi.getPrimaryKeyValueForRowNode(addedRowNode);
-                  const info: RowHighlightInfo = {
-                    primaryKeyValue,
-                    timeout: 2000,
-                    highlightStyle: {
-                      BackColor: `var(--ab-color-info)`,
-                    },
-                  };
-
-                  context.adaptableApi.gridApi.setCellValue('user', CURRENT_USER, primaryKeyValue);
-                  context.adaptableApi.gridApi.highlightRow(info);
-                  context.adaptableApi.gridApi.jumpToRow(primaryKeyValue);
-                }
-              },
-            },
-          ],
+        name: 'assignToMeAction',
+        handler: (button, context) => {
+          if (
+            context.alert.alertType === 'rowChanged' &&
+            context.alert.alertDefinition?.Rule?.Predicate?.PredicateId === 'AddedRow'
+          ) {
+            const addedRowNode = context.alert.gridDataChangedInfo?.rowNodes?.[0];
+            if (addedRowNode) {
+              const primaryKeyValue =
+                context.adaptableApi.gridApi.getPrimaryKeyValueForRowNode(addedRowNode);
+              context.adaptableApi.gridApi.setCellValue('user', CURRENT_USER, primaryKeyValue);
+            }
+          }
         },
       },
     ],
@@ -551,7 +510,26 @@ const adaptableOptions: AdaptableOptions = {
           AlertProperties: {
             DisplayNotification: true,
           },
-          AlertForm: 'newTradeAlertForm',
+          AlertForm: {
+            Buttons: [
+              {
+                Label: 'Show Me',
+                ButtonStyle: {
+                  variant: 'raised',
+                  tone: 'info',
+                },
+                Action: ['highlight-row', 'jump-to-row'],
+              },
+              {
+                Label: 'Assign Me',
+                ButtonStyle: {
+                  variant: 'outlined',
+                  tone: 'accent',
+                },
+                Action: ['assignToMeAction', 'highlight-row', 'jump-to-row'],
+              },
+            ],
+          },
         },
       ],
     },
