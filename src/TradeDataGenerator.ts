@@ -9,7 +9,7 @@ const DEFAULT_CONFIG: Required<DataGeneratorConfig> = {
   maxMarketPricePercentageVariation: 5,
   marketPriceVariationIntervalInSeconds: 1,
   enableContinuousTradeGeneration: true,
-  tradeGenerationIntervalInSeconds: 10,
+  tradeGenerationIntervalInSeconds: 5,
 };
 
 export class TradeDataGenerator {
@@ -119,12 +119,14 @@ export class TradeDataGenerator {
       headerName: 'User',
       field: 'user',
       enableRowGroup: true,
+      editable: true,
       type: ['abColDefString'],
     });
     schema.push({
       headerName: 'Book',
       field: 'book',
       enableRowGroup: true,
+      editable: true,
       type: ['abColDefString'],
     });
     schema.push({
@@ -147,6 +149,7 @@ export class TradeDataGenerator {
       headerName: 'B/S',
       field: 'direction',
       enableRowGroup: true,
+      enablePivot: true,
       type: ['abColDefString'],
     });
     schema.push({
@@ -189,6 +192,7 @@ export class TradeDataGenerator {
       field: 'quantity',
       enablePivot: true,
       enableValue: true,
+      editable: true,
       type: ['abColDefNumber'],
     });
     schema.push({
@@ -475,6 +479,8 @@ const INSTRUMENT_DATA: Record<string, InstrumentInfo> = {
   },
 };
 
+export const CURRENT_USER = 'Finsemble Demo User';
+
 const TRADERS_DATA = [
   'Stacee Dreiling',
   'Cecil Staab',
@@ -487,10 +493,11 @@ const TRADERS_DATA = [
   'Germanine Rybicki',
   'Granville Westfall',
   'Colby Troupe',
-  'Gerry Frith',
-  'Sarai Pilgrim',
-  'Yael Rich',
-  'Hester Bluhm',
+  CURRENT_USER,
+  // 'Gerry Frith',
+  // 'Sarai Pilgrim',
+  // 'Yael Rich',
+  // 'Hester Bluhm',
 ];
 
 const BOOKS_DATA = ['A1', 'B2'];
