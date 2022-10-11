@@ -26,6 +26,8 @@ import { AboutPanelComponent } from './AboutPanel';
 import { PredicateDefHandlerParams } from '@adaptabletools/adaptable/src/PredefinedConfig/Common/AdaptablePredicate';
 import { CustomToolbarButtonContext } from '@adaptabletools/adaptable/src/AdaptableOptions/DashboardOptions';
 import { ColumnFilter } from '@adaptabletools/adaptable/src/types';
+import { RowHighlightInfo } from '@adaptabletools/adaptable/src/PredefinedConfig/Common/RowHighlightInfo';
+import { AdaptableRowChangedAlert } from '@adaptabletools/adaptable/src/PredefinedConfig/Common/AdaptableAlert';
 
 const hiddenContextMenus: AdaptableModule[] = [
   'CellSummary',
@@ -55,19 +57,12 @@ const finsembleOptions: FinsemblePluginOptions = {
 
 const financeOptions: FinancePluginOptions = {
   fdc3Columns: {
-    contactColumns: [
-      {
-        columnId: 'lastUpdatedBy',
-        nameColumnId: 'Last Updated By',
-        intents: ['StartChat', 'ViewContact'],
-        showBroadcastContextMenu: true,
-      },
-    ],
-
     instrumentColumns: [
       {
-        columnId: 'ticker',
-        nameColumnId: 'Ticker AFL',
+        columnId: 'instrument',
+        nameColumnId: 'Instrument',
+        tickerColumnId: 'ticker',
+        cusipColumnId: 'cusip',
         intents: ['ViewChart'],
         showBroadcastContextMenu: true,
       },
@@ -120,32 +115,6 @@ const adaptableOptions: AdaptableOptions = {
         actionColumnButton: [
           {
             icon: {
-              name: 'clear',
-            },
-            tooltip: 'Reject',
-            hidden: (
-              button: AdaptableButton<ActionColumnContext>,
-              context: ActionColumnContext
-            ) => {
-              return context.rowNode?.data?.status !== 'In Progress';
-            },
-            onClick: (
-              button: AdaptableButton<ActionColumnContext>,
-              context: ActionColumnContext
-            ) => {
-              context.adaptableApi.gridApi.setCellValue(
-                'status',
-                'Rejected',
-                context.primaryKeyValue
-              );
-            },
-            buttonStyle: {
-              variant: 'outlined',
-              tone: 'warning',
-            },
-          },
-          {
-            icon: {
               name: 'check',
             },
             tooltip: 'Complete',
@@ -168,6 +137,32 @@ const adaptableOptions: AdaptableOptions = {
             buttonStyle: {
               variant: 'outlined',
               tone: 'success',
+            },
+          },
+          {
+            icon: {
+              name: 'clear',
+            },
+            tooltip: 'Reject',
+            hidden: (
+              button: AdaptableButton<ActionColumnContext>,
+              context: ActionColumnContext
+            ) => {
+              return context.rowNode?.data?.status !== 'In Progress';
+            },
+            onClick: (
+              button: AdaptableButton<ActionColumnContext>,
+              context: ActionColumnContext
+            ) => {
+              context.adaptableApi.gridApi.setCellValue(
+                'status',
+                'Rejected',
+                context.primaryKeyValue
+              );
+            },
+            buttonStyle: {
+              variant: 'outlined',
+              tone: 'warning',
             },
           },
         ],
@@ -234,6 +229,71 @@ const adaptableOptions: AdaptableOptions = {
             },
           },
         ],
+      },
+    ],
+  },
+  notificationsOptions: {
+    duration: 10000,
+    closeWhenClicked: true,
+  },
+  alertOptions: {
+    alertForms: [
+      {
+        name: 'newTradeAlertForm',
+        form: {
+          buttons: [
+            {
+              label: 'Show Me',
+              buttonStyle: {
+                variant: 'raised',
+                tone: 'info',
+              },
+              onClick: (button, context) => {
+                const addedRowNode = (context.alert as AdaptableRowChangedAlert).gridDataChangedInfo
+                  ?.rowNodes?.[0];
+                if (addedRowNode) {
+                  const primaryKeyValue =
+                    context.adaptableApi.gridApi.getPrimaryKeyValueForRowNode(addedRowNode);
+                  const info: RowHighlightInfo = {
+                    primaryKeyValue,
+                    timeout: 2000,
+                    highlightStyle: {
+                      BackColor: `var(--ab-color-info)`,
+                    },
+                  };
+                  context.adaptableApi.gridApi.highlightRow(info);
+                  context.adaptableApi.gridApi.jumpToRow(primaryKeyValue);
+                }
+              },
+            },
+            {
+              label: 'Assign to Me',
+              buttonStyle: {
+                variant: 'raised',
+                tone: 'success',
+              },
+              onClick: (button, context) => {
+                const addedRowNode = (context.alert as AdaptableRowChangedAlert).gridDataChangedInfo
+                  ?.rowNodes?.[0];
+                if (addedRowNode) {
+                  const primaryKeyValue =
+                    context.adaptableApi.gridApi.getPrimaryKeyValueForRowNode(addedRowNode);
+                  const info: RowHighlightInfo = {
+                    primaryKeyValue,
+                    timeout: 2000,
+                    highlightStyle: {
+                      BackColor: `var(--ab-color-info)`,
+                    },
+                  };
+
+                  context.adaptableApi.gridApi.setCellValue('user', CURRENT_USER, primaryKeyValue);
+                  context.adaptableApi.gridApi.highlightRow(info);
+                  context.adaptableApi.gridApi.jumpToRow(primaryKeyValue);
+                }
+              },
+            },
+          ],
+        },
       },
     ],
   },
@@ -319,7 +379,7 @@ const adaptableOptions: AdaptableOptions = {
       StatusBars: [
         {
           Key: 'Center Panel',
-          StatusBarPanels: ['Alert'],
+          StatusBarPanels: ['Alert', 'SystemStatus'],
         },
         {
           Key: 'Right Panel',
@@ -336,6 +396,7 @@ const adaptableOptions: AdaptableOptions = {
             ColumnIds: [
               'tradeId',
               'direction',
+              'instrument',
               'ticker',
               'cusip',
               'clientName',
@@ -364,7 +425,11 @@ const adaptableOptions: AdaptableOptions = {
       Tabs: [
         {
           Name: 'Demo',
-          Toolbars: ['Layout', 'My Trades', 'Export'],
+          Toolbars: ['Layout', 'My Trades', 'Export', 'Query'],
+        },
+        {
+          Name: 'FDC3',
+          Toolbars: ['SystemStatus'],
         },
       ],
     },
@@ -378,9 +443,9 @@ const adaptableOptions: AdaptableOptions = {
             'tradeId',
             'user',
             'direction',
+            'instrument',
             'ticker',
             'cusip',
-            'description',
             'status',
             'changeStatus',
             'marketPrice',
@@ -409,7 +474,7 @@ const adaptableOptions: AdaptableOptions = {
             'direction',
             'ticker',
             // 'cusip',
-            // 'description',
+            // 'instrument',
             'clientName',
             'book',
             // 'rating',
@@ -435,7 +500,7 @@ const adaptableOptions: AdaptableOptions = {
             'direction',
             // 'ticker',
             // 'cusip',
-            // 'description',
+            // 'instrument',
             'clientName',
             'book',
             'rating',
@@ -480,29 +545,12 @@ const adaptableOptions: AdaptableOptions = {
               PredicateId: 'AddedRow',
             },
           },
+          MessageText: 'New Trade',
           MessageType: 'Info',
           AlertProperties: {
             DisplayNotification: true,
           },
-          AlertForm: {
-            Buttons: [
-              {
-                Label: 'OK',
-                ButtonStyle: {
-                  variant: 'outlined',
-                  tone: 'neutral',
-                },
-              },
-              {
-                Label: 'Show Me',
-                ButtonStyle: {
-                  variant: 'raised',
-                  tone: 'info',
-                },
-                Action: ['highlight-row', 'jump-to-row'],
-              },
-            ],
-          },
+          AlertForm: 'newTradeAlertForm',
         },
       ],
     },
@@ -723,6 +771,19 @@ const adaptableOptions: AdaptableOptions = {
         },
       ],
     },
+    Query: {
+      NamedQueries: [
+        {
+          Name: 'Live $ Trades',
+          BooleanExpression: "[currency] = 'USD' AND [status] = 'In Progress'",
+        },
+        {
+          Name: 'Settling soon',
+          BooleanExpression:
+            "DIFF_DAYS([settlementDate], NOW() ) <= 7 AND [status] = 'In Progress'",
+        },
+      ],
+    },
   },
 };
 
@@ -742,29 +803,13 @@ export const AdaptableAgGrid = () => {
 
           const tradeDataGenerator = TradeDataGenerator.initialize(adaptableApi);
 
-          const finsembleApi = adaptableApi.pluginsApi.getFinsemblePluginApi();
-
-          const fdc3Api = getFDC3();
-          fdc3Api?.addIntentListener('ViewChart', (context: any) => {
-            const { type } = context;
-
-            console.log(context);
-
-            adaptableApi.systemStatusApi.setInfoSystemStatus(
-              'FDC3 Intent (' + type + ')',
-              JSON.stringify(context)
-            );
-          });
-
           adaptableApi.eventApi.on('FDC3MessageSent', (eventInfo: AdaptableFDC3EventInfo) => {
-            if (eventInfo.eventType === 'RaiseIntent') {
-              const fdc3Api = getFDC3();
-              if (fdc3Api) {
-                console.log('Raising intent: ', eventInfo.intent, eventInfo.context);
-                fdc3Api.raiseIntent(eventInfo.intent, eventInfo.context);
-              } else {
-                console.error('AdapTable: No fdc3 object available!');
-              }
+            if (eventInfo.eventType === 'BroadcastMessage') {
+              console.log(eventInfo);
+              adaptableApi.systemStatusApi.setInfoSystemStatus(
+                `Broadcasting ${eventInfo?.context?.id?.ticker} ${eventInfo?.context?.id?.CUSIP}`,
+                JSON.stringify(eventInfo.context)
+              );
             }
           });
         }}

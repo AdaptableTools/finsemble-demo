@@ -9,7 +9,7 @@ const DEFAULT_CONFIG: Required<DataGeneratorConfig> = {
   maxMarketPricePercentageVariation: 5,
   marketPriceVariationIntervalInSeconds: 1,
   enableContinuousTradeGeneration: true,
-  tradeGenerationIntervalInSeconds: 15,
+  tradeGenerationIntervalInSeconds: 60,
 };
 
 export class TradeDataGenerator {
@@ -171,8 +171,8 @@ export class TradeDataGenerator {
       type: ['abColDefString'],
     });
     schema.push({
-      headerName: 'Description',
-      field: 'description',
+      headerName: 'Instrument',
+      field: 'instrument',
       type: ['abColDefString'],
     });
     schema.push({
@@ -259,7 +259,7 @@ export class TradeDataGenerator {
       status,
       ticker: instrument.ticker,
       cusip: instrument.cusip,
-      description: instrument.instrument,
+      instrument: instrument.instrument,
       currency: this.pickRandomElement(this.getCurrencyData()),
       quantity: this.getRandomInt(2, 5),
       unitPrice,
@@ -599,7 +599,7 @@ export interface Trade {
   status: TradeStatus;
   ticker: string;
   cusip: string;
-  description: string;
+  instrument: string;
   currency: string;
   quantity: number;
   unitPrice: number;
