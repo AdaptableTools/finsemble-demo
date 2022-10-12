@@ -8,8 +8,8 @@ const DEFAULT_CONFIG: Required<DataGeneratorConfig> = {
   enableMarketPriceVariation: true,
   maxMarketPricePercentageVariation: 5,
   forcedMarketPricePercentageVariation: 10,
-  forceMarketPricePercentageVariationSequence: 100,
-  marketPriceVariationIntervalInSeconds: 5,
+  forceMarketPricePercentageVariationSequence: 50,
+  marketPriceVariationIntervalInSeconds: 2,
   enableContinuousTradeGeneration: true,
   tradeGenerationIntervalInSeconds: 60,
 };
@@ -333,7 +333,7 @@ export class TradeDataGenerator {
       marketPrice: updatedInstrument.marketPrice,
     }));
 
-    this.adaptableApi.gridApi.updateGridData(updatedRowData);
+    this.adaptableApi.gridApi.updateGridData(updatedRowData, { runAsync: true });
 
     // AFL: not very nice, but currently there is no way to trigger a single alert for multiple changed cells
     if (conf?.forceMarketPriceVariation && updatedRowData.length) {
