@@ -357,7 +357,7 @@ export class TradeDataGenerator {
     }
 
     const randomNumber = this.getRandomInt(1, 7);
-    if (randomNumber == 1) {
+    if (randomNumber === 1) {
       return 'Rejected';
     }
     return 'In Progress';

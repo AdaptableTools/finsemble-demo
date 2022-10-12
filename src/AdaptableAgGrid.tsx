@@ -972,7 +972,3 @@ export const AdaptableAgGrid = () => {
     </div>
   );
 };
-
-const getFDC3 = () => {
-  return (globalThis as any).fdc3;
-};
