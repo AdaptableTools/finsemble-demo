@@ -45,7 +45,7 @@ const hiddenContextMenus: AdaptableModule[] = [
 // let ag-grid know which columns and what data to use and add some other properties
 const gridOptions = TradeDataGenerator.getGridOptions();
 
-const STATE_REVISION = 1665498873205;
+const STATE_REVISION = 1665498873206;
 
 const finsembleOptions: FinsemblePluginOptions = {
   stateOptions: {
@@ -854,7 +854,15 @@ export const AdaptableAgGrid = () => {
           adaptableApiRef.current = adaptableApi;
 
           const tradeDataGenerator = TradeDataGenerator.initialize(adaptableApi);
-          gridOptions.columnApi?.autoSizeAllColumns(true);
+
+          // temporary hack, until https://github.com/AdaptableTools/adaptable/issues/1910 is fixed
+          const positionCalCol =
+            adaptableApi.calculatedColumnApi.getCalculatedColumnForColumnId('position');
+          if (positionCalCol) {
+            adaptableApi.calculatedColumnApi.editCalculatedColumn(positionCalCol);
+          }
+
+          gridOptions.columnApi?.autoSizeAllColumns();
 
           adaptableApi.eventApi.on('FDC3MessageSent', (eventInfo: AdaptableFDC3EventInfo) => {
             if (eventInfo.eventType === 'BroadcastMessage') {
