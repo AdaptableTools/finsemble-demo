@@ -8,8 +8,10 @@ import AdaptableReact, {
   AdaptableMenuItem,
   AdaptableModule,
   AdaptableOptions,
+  ContextMenuContext,
   FinancePluginOptions,
   FinsemblePluginOptions,
+  GridCell,
 } from '@adaptabletools/adaptable-react-aggrid';
 
 // import agGrid Component
@@ -25,8 +27,6 @@ import { AboutPanelComponent } from './AboutPanel';
 import { PredicateDefHandlerParams } from '@adaptabletools/adaptable/src/PredefinedConfig/Common/AdaptablePredicate';
 import { CustomToolbarButtonContext } from '@adaptabletools/adaptable/src/AdaptableOptions/DashboardOptions';
 import { ColumnFilter } from '@adaptabletools/adaptable/src/types';
-import { RowHighlightInfo } from '@adaptabletools/adaptable/src/PredefinedConfig/Common/RowHighlightInfo';
-import { AdaptableRowChangedAlert } from '@adaptabletools/adaptable/src/PredefinedConfig/Common/AdaptableAlert';
 
 const hiddenContextMenus: AdaptableModule[] = [
   'CellSummary',
@@ -97,6 +97,16 @@ const adaptableOptions: AdaptableOptions = {
   layoutOptions: {
     autoSizeColumnsInLayout: true,
   },
+  editOptions: {
+    isCellEditable: (gridCell: GridCell) => {
+      // No row where 'Language' is 'HTML'
+      if (gridCell.rowNode.data['status'] !== 'In Progress') {
+        return false;
+      }
+      return true;
+    },
+  },
+
   userInterfaceOptions: {
     editLookUpItems: [
       {
@@ -178,10 +188,29 @@ const adaptableOptions: AdaptableOptions = {
   dashboardOptions: {
     customToolbars: [
       {
+        name: 'About',
+        title: 'About',
+        toolbarButtons: [
+          {
+            label: 'Read Me',
+            buttonStyle: {
+              variant: 'outlined',
+              tone: 'neutral',
+            },
+            onClick: (
+              button: AdaptableButton<CustomToolbarButtonContext>,
+              context: CustomToolbarButtonContext
+            ) => {
+              context.adaptableApi.settingsPanelApi.showCustomSettingsPanel('About AdapTable');
+            },
+          },
+        ],
+      },
+      {
         name: 'My Trades',
         toolbarButtons: [
           {
-            label: 'Show my trades',
+            label: 'My Trades',
             buttonStyle: {
               variant: 'raised',
               tone: 'accent',
@@ -211,7 +240,7 @@ const adaptableOptions: AdaptableOptions = {
             },
           },
           {
-            label: 'Show all trades',
+            label: 'All trades',
             buttonStyle: {
               variant: 'outlined',
               tone: 'accent',
@@ -257,6 +286,18 @@ const adaptableOptions: AdaptableOptions = {
       },
     ],
   },
+  generalOptions: {
+    customSortComparers: [
+      {
+        scope: {
+          ColumnIds: ['pnl'],
+        },
+        comparer: (valueA: any, valueB: any) => {
+          return Math.abs(valueB) - Math.abs(valueA);
+        },
+      },
+    ],
+  },
   adaptableQLOptions: {
     expressionOptions: {
       customQueryVariables: {
@@ -288,6 +329,29 @@ const adaptableOptions: AdaptableOptions = {
     showAdaptableContextMenu: (menuItem: AdaptableMenuItem) => {
       return !hiddenContextMenus.includes(menuItem.module as AdaptableModule);
     },
+
+    contextMenuItems: [
+      {
+        label: 'Assign to me',
+        icon: {
+          src: 'person',
+          style: { margin: '5px' },
+        },
+        onClick: (menuContext: ContextMenuContext) => {
+          menuContext.adaptableApi.gridApi.setCellValue(
+            'user',
+            CURRENT_USER,
+            menuContext.primaryKeyValue
+          );
+        },
+        hidden: (menuContext: ContextMenuContext) => {
+          return (
+            menuContext.rowNode.data['status'] !== 'In Progress' ||
+            menuContext.rowNode.data['user'] === CURRENT_USER
+          );
+        },
+      },
+    ],
   },
   settingsPanelOptions: {
     customSettingsPanels: [
@@ -385,7 +449,7 @@ const adaptableOptions: AdaptableOptions = {
       Tabs: [
         {
           Name: 'Demo',
-          Toolbars: ['Layout', 'My Trades', 'Export', 'Query'],
+          Toolbars: ['About', 'Layout', 'My Trades', 'Export', 'Query'],
         },
         {
           Name: 'FDC3',
@@ -490,6 +554,15 @@ const adaptableOptions: AdaptableOptions = {
             pnl: 'sum',
             position: 'sum',
           },
+        },
+      ],
+    },
+    CustomSort: {
+      Revision: STATE_REVISION,
+      CustomSorts: [
+        {
+          ColumnId: 'user',
+          SortedValues: [CURRENT_USER],
         },
       ],
     },
@@ -638,7 +711,7 @@ const adaptableOptions: AdaptableOptions = {
             FontStyle: 'Italic',
           },
           Rule: {
-            BooleanExpression: "[status] = 'Rejected'",
+            BooleanExpression: "[status] != 'In Progress'",
           },
         },
       ],
