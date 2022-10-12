@@ -7,9 +7,10 @@ export const AboutPanelComponent = () => {
       <p>
         It is designed to illustrate how well AdapTable integrates with the Finsemble smart desktop.
       </p>
+      <p>The demo showcses some of the additional functionality on offer when using both tools.</p>
       <p>
-        In particular it showcses some of the additional functionality on offer when using both
-        tools.
+        In particular it highlights how well AdapTable and Finsemble leverage FDC3 to enable
+        communication between multiple widgets.
       </p>
       <p>
         Similar to real life applications which contain AdapTable, the demo ships with a combination
