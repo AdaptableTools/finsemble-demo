@@ -41,6 +41,12 @@ export class TradeDataGenerator {
 
     // generate new trade on a given interval
     if (config.enableContinuousTradeGeneration && config.tradeGenerationIntervalInSeconds > 0) {
+      // generate the first trade after a few seconds, so the user sees something early on
+      setTimeout(() => {
+        const newTrade = generator.generateTrade({ tradeDateToday: true });
+        adaptableApi.gridApi.addGridData([newTrade], { addIndex: 0 });
+      }, 5000);
+
       setInterval(() => {
         const newTrade = generator.generateTrade({ tradeDateToday: true });
         adaptableApi.gridApi.addGridData([newTrade], { addIndex: 0 });

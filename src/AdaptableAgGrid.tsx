@@ -25,8 +25,6 @@ import { AboutPanelComponent } from './AboutPanel';
 import { PredicateDefHandlerParams } from '@adaptabletools/adaptable/src/PredefinedConfig/Common/AdaptablePredicate';
 import { CustomToolbarButtonContext } from '@adaptabletools/adaptable/src/AdaptableOptions/DashboardOptions';
 import { ColumnFilter } from '@adaptabletools/adaptable/src/types';
-import { RowHighlightInfo } from '@adaptabletools/adaptable/src/PredefinedConfig/Common/RowHighlightInfo';
-import { AdaptableRowChangedAlert } from '@adaptabletools/adaptable/src/PredefinedConfig/Common/AdaptableAlert';
 
 const hiddenContextMenus: AdaptableModule[] = [
   'CellSummary',
@@ -45,7 +43,7 @@ const hiddenContextMenus: AdaptableModule[] = [
 // let ag-grid know which columns and what data to use and add some other properties
 const gridOptions = TradeDataGenerator.getGridOptions();
 
-const STATE_REVISION = 1665498873205;
+const STATE_REVISION = 1665498873206;
 
 const finsembleOptions: FinsemblePluginOptions = {
   stateOptions: {
@@ -94,9 +92,7 @@ const adaptableOptions: AdaptableOptions = {
   userName: CURRENT_USER,
   adaptableId: 'finsemble-adaptable-demo',
   plugins: [finance(financeOptions), finsemble(finsembleOptions)],
-  layoutOptions: {
-    autoSizeColumnsInLayout: true,
-  },
+  layoutOptions: { autoSizeColumnsInLayout: true },
   userInterfaceOptions: {
     editLookUpItems: [
       {
@@ -782,7 +778,15 @@ export const AdaptableAgGrid = () => {
           adaptableApiRef.current = adaptableApi;
 
           const tradeDataGenerator = TradeDataGenerator.initialize(adaptableApi);
-          gridOptions.columnApi?.autoSizeAllColumns(true);
+
+          // temporary hack, until https://github.com/AdaptableTools/adaptable/issues/1910 is fixed
+          const positionCalCol =
+            adaptableApi.calculatedColumnApi.getCalculatedColumnForColumnId('position');
+          if (positionCalCol) {
+            adaptableApi.calculatedColumnApi.editCalculatedColumn(positionCalCol);
+          }
+
+          gridOptions.columnApi?.autoSizeAllColumns();
 
           adaptableApi.eventApi.on('FDC3MessageSent', (eventInfo: AdaptableFDC3EventInfo) => {
             if (eventInfo.eventType === 'BroadcastMessage') {
