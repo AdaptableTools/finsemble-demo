@@ -515,7 +515,7 @@ const TRADERS_DATA = [
   // 'Hester Bluhm',
 ];
 
-const BOOKS_DATA = ['A1', 'B2'];
+const BOOKS_DATA = ['A1', 'A2', 'A3', 'B1', 'B2', 'B2', 'B3'];
 
 const COUNTERPARTY_DATA = [
   'Goldman Sachs',

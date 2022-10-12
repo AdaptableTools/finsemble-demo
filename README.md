@@ -1,24 +1,11 @@
-# example-adaptable-react-aggrid-template
+# finsemble-demo
 
-## React Wrapper Example
+## AdapTable Example
 
-This is a very basic example of how to install and get started with the Adaptable React Wrapper.
+This is a small demo application of AdapTable designed to be used inside Finsemble.
 
-It uses v.12.x (AdapTable Rx) of AdapTable and v.27.x of AG GRID
+It uses v.13.x (AdapTable Rx) of AdapTable and v.28.x of AG GRID
 
-For full information on how to use the AdapTable React Wrapper see the [AdapTable Documentation](https://docs.adaptabletools.com/learn/react-overview).
-
-### Installation
-
-Run `npm install` (or `yarn`), depending on what tool you're using.
-
-### Running for development
-
-Execute the following command
-
-```sh
-$ npm run start
-```
 
 ## Licences
 
