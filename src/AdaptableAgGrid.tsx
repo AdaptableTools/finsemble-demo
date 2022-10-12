@@ -28,6 +28,7 @@ import { PredicateDefHandlerParams } from '@adaptabletools/adaptable/src/Predefi
 import { CustomToolbarButtonContext } from '@adaptabletools/adaptable/src/AdaptableOptions/DashboardOptions';
 import { ColumnFilter } from '@adaptabletools/adaptable/src/types';
 import { handleIncomingMessageBroadcast } from './finsembleUtils';
+import { GridOptions } from '@ag-grid-community/core';
 
 const hiddenContextMenus: AdaptableModule[] = [
   'CellSummary',
@@ -46,7 +47,7 @@ const hiddenContextMenus: AdaptableModule[] = [
 // let ag-grid know which columns and what data to use and add some other properties
 const gridOptions = TradeDataGenerator.getGridOptions();
 
-const STATE_REVISION = 1665498873206;
+const STATE_REVISION = 1665498873207;
 
 const finsembleOptions: FinsemblePluginOptions = {
   stateOptions: {
@@ -262,6 +263,49 @@ const adaptableOptions: AdaptableOptions = {
           },
         ],
       },
+      {
+        name: 'Market Price Alert',
+        title: 'Change market price with 10% for a random Ticker',
+        toolbarButtons: [
+          {
+            label: 'Trigger Market Price Warning',
+            onClick: (button, context) => {
+              const gridOptions: GridOptions = context.adaptableApi.internalApi.getAgGridInstance();
+              const tradeGenerator = gridOptions.context.tradeGenerator as TradeDataGenerator;
+              tradeGenerator.updateMarketPriceOnRandomInstrument({
+                forceMarketPriceVariation: true,
+              });
+            },
+            buttonStyle: {
+              tone: 'warning',
+            },
+          },
+        ],
+      },
+      {
+        name: 'Quantity Change Alert',
+        title: 'Double the quantity for the first displayed Trade',
+        toolbarButtons: [
+          {
+            label: 'Trigger Quantity Change Alert',
+            onClick: (button, context) => {
+              const adaptableApi = context.adaptableApi;
+              const anyRowNode =
+                adaptableApi.gridApi.getFirstDisplayedRowNode() ??
+                adaptableApi.gridApi.getFirstRowNode();
+
+              adaptableApi.gridApi.setCellValue(
+                'quantity',
+                anyRowNode.data['quantity'] * 2,
+                adaptableApi.gridApi.getPrimaryKeyValueForRowNode(anyRowNode)
+              );
+            },
+            buttonStyle: {
+              tone: 'info',
+            },
+          },
+        ],
+      },
     ],
   },
   notificationsOptions: {
@@ -269,6 +313,15 @@ const adaptableOptions: AdaptableOptions = {
     closeWhenClicked: true,
   },
   alertOptions: {
+    alertMessageText: ({ alertDefinition, cellDataChangedInfo }) => {
+      if (
+        alertDefinition.Rule?.Predicate?.PredicateId === 'Any' &&
+        cellDataChangedInfo?.column?.columnId === 'quantity'
+      ) {
+        return `Quantity of trade ${cellDataChangedInfo.rowData.tradeId}(${cellDataChangedInfo.rowData.clientName}) was changed from ${cellDataChangedInfo.oldValue} to ${cellDataChangedInfo.newValue}`;
+      }
+      return undefined;
+    },
     actionHandlers: [
       {
         name: 'assignToMeAction',
@@ -455,6 +508,10 @@ const adaptableOptions: AdaptableOptions = {
           Name: 'FDC3',
           Toolbars: ['SystemStatus'],
         },
+        {
+          Name: 'Manual Alerts',
+          Toolbars: ['Market Price Alert', 'Quantity Change Alert'],
+        },
       ],
     },
     Layout: {
@@ -600,6 +657,38 @@ const adaptableOptions: AdaptableOptions = {
                   tone: 'accent',
                 },
                 Action: ['assignToMeAction', 'highlight-row', 'jump-to-row'],
+              },
+            ],
+          },
+        },
+        {
+          Scope: {
+            ColumnIds: ['quantity'],
+          },
+          Rule: {
+            Predicate: {
+              PredicateId: 'Any',
+            },
+          },
+          MessageType: 'Info',
+          AlertProperties: {
+            DisplayNotification: true,
+          },
+          AlertForm: {
+            Buttons: [
+              {
+                Label: 'OK',
+                ButtonStyle: {
+                  variant: 'raised',
+                },
+              },
+              {
+                Label: 'Undo',
+                ButtonStyle: {
+                  variant: 'raised',
+                  tone: 'warning',
+                },
+                Action: ['undo'],
               },
             ],
           },

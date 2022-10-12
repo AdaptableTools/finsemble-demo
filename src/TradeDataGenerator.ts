@@ -7,7 +7,9 @@ const DEFAULT_CONFIG: Required<DataGeneratorConfig> = {
   maxUnitPricePercentageDeviation: 10,
   enableMarketPriceVariation: true,
   maxMarketPricePercentageVariation: 5,
-  marketPriceVariationIntervalInSeconds: 1,
+  forcedMarketPricePercentageVariation: 10,
+  forceMarketPricePercentageVariationSequence: 100,
+  marketPriceVariationIntervalInSeconds: 5,
   enableContinuousTradeGeneration: true,
   tradeGenerationIntervalInSeconds: 60,
 };
@@ -30,6 +32,10 @@ export class TradeDataGenerator {
     customConfig?: DataGeneratorConfig
   ): TradeDataGenerator {
     const generator = new TradeDataGenerator(adaptableApi, customConfig);
+
+    const gridOptions = adaptableApi.internalApi.getAgGridInstance() as GridOptions;
+    gridOptions.context = gridOptions.context ?? {};
+    gridOptions.context.tradeGenerator = generator;
 
     const { config } = generator;
 
@@ -56,18 +62,14 @@ export class TradeDataGenerator {
     // update market price on a given interval
     if (config.enableMarketPriceVariation) {
       setInterval(() => {
-        const updatedInstrument = generator.updateMarketPriceOnRandomInstrument();
+        const forceMarketPriceVariation =
+          generator.getCurrentTradeCounter() %
+            config.forceMarketPricePercentageVariationSequence ===
+          0;
 
-        // update all grid rows which reference the updated instrument
-        const relevantRowNodes: RowNode<Trade>[] = adaptableApi.gridApi.getAllRowNodes({
-          filterFn: (rowNode: RowNode<Trade>) => rowNode.data?.ticker === updatedInstrument.ticker,
+        generator.updateMarketPriceOnRandomInstrument({
+          forceMarketPriceVariation,
         });
-        const updatedRowData = relevantRowNodes.map((rowNode) => ({
-          ...rowNode.data,
-          marketPrice: updatedInstrument.marketPrice,
-        }));
-
-        adaptableApi.gridApi.updateGridData(updatedRowData);
       }, config.marketPriceVariationIntervalInSeconds * 1000);
     }
 
@@ -288,6 +290,10 @@ export class TradeDataGenerator {
     return tradeItem;
   }
 
+  getCurrentTradeCounter() {
+    return this.state.currentCounter;
+  }
+
   private generateTrades(size: number): Trade[] {
     const generatedData: Trade[] = [];
     for (let count = 1; count <= size; count++) {
@@ -297,21 +303,48 @@ export class TradeDataGenerator {
     return generatedData.reverse();
   }
 
-  private updateMarketPriceOnRandomInstrument(): InstrumentInfo {
+  public updateMarketPriceOnRandomInstrument(conf?: {
+    forceMarketPriceVariation?: boolean;
+  }): InstrumentInfo {
     const instrument = this.pickRandomInstrument();
-    const marketPriceDeltaValue =
-      (instrument.marketPrice *
-        this.getRandomInt(1, this.config.maxMarketPricePercentageVariation)) /
-      100;
+
+    const marketPriceVariation = conf?.forceMarketPriceVariation
+      ? this.config.forcedMarketPricePercentageVariation
+      : this.getRandomInt(1, this.config.maxMarketPricePercentageVariation);
+
+    const marketPriceDeltaValue = (instrument.marketPrice * marketPriceVariation) / 100;
     const newMarketPrice = this.getRandomBoolean()
       ? instrument.marketPrice - marketPriceDeltaValue
       : instrument.marketPrice + marketPriceDeltaValue;
 
+    const oldMarketPriceValue = INSTRUMENT_DATA[instrument.ticker].marketPrice;
     INSTRUMENT_DATA[instrument.ticker].marketPrice = newMarketPrice;
 
-    return this.getInstrumentData().find(
+    const updatedInstrument = this.getInstrumentData().find(
       (instrumentInfo) => instrumentInfo.ticker === instrument.ticker
     ) as InstrumentInfo;
+
+    // update all grid rows which reference the updated instrument
+    const relevantRowNodes: RowNode<Trade>[] = this.adaptableApi.gridApi.getAllRowNodes({
+      filterFn: (rowNode: RowNode<Trade>) => rowNode.data?.ticker === updatedInstrument.ticker,
+    });
+    const updatedRowData = relevantRowNodes.map((rowNode) => ({
+      ...rowNode.data,
+      marketPrice: updatedInstrument.marketPrice,
+    }));
+
+    this.adaptableApi.gridApi.updateGridData(updatedRowData);
+
+    // AFL: not very nice, but currently there is no way to trigger a single alert for multiple changed cells
+    if (conf?.forceMarketPriceVariation && updatedRowData.length) {
+      const message = `Market Price for ${instrument.ticker} has a  10% change, from ${oldMarketPriceValue} to ${newMarketPrice}`;
+      this.adaptableApi.alertApi.showAlertWarning(
+        `${instrument.ticker} -  Significant Market Price Change!`,
+        message
+      );
+    }
+
+    return updatedInstrument;
   }
 
   private pickRandomInstrument(): InstrumentInfo {
@@ -588,6 +621,14 @@ export interface DataGeneratorConfig {
    * Interval in SECONDS for market price variation
    */
   marketPriceVariationIntervalInSeconds?: number;
+  /**
+   * Forced market price variation in percentage points
+   */
+  forcedMarketPricePercentageVariation?: number;
+  /**
+   * Force market price variation every given X updates
+   */
+  forceMarketPricePercentageVariationSequence: number;
   /**
    * Whether new trades should be generated every `continuousTradeGenerationInterval` seconds
    */
