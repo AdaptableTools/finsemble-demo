@@ -371,7 +371,6 @@ const adaptableOptions: AdaptableOptions = {
         'Alert',
         'CalculatedColumn',
         'CustomSort',
-        'DataSet',
         'Export',
         'Filter',
         'FlashingCell',
