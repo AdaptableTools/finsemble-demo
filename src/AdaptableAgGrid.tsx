@@ -27,6 +27,7 @@ import { AboutPanelComponent } from './AboutPanel';
 import { PredicateDefHandlerParams } from '@adaptabletools/adaptable/src/PredefinedConfig/Common/AdaptablePredicate';
 import { CustomToolbarButtonContext } from '@adaptabletools/adaptable/src/AdaptableOptions/DashboardOptions';
 import { ColumnFilter } from '@adaptabletools/adaptable/src/types';
+import { handleIncomingMessageBroadcast } from './finsembleUtils';
 
 const hiddenContextMenus: AdaptableModule[] = [
   'CellSummary',
@@ -49,7 +50,7 @@ const STATE_REVISION = 1665498873206;
 
 const finsembleOptions: FinsemblePluginOptions = {
   stateOptions: {
-    persistInFinsemble: false,
+    persistInFinsemble: true,
     key: 'local-finsemble-state-key',
     topic: 'local-finsemble-state-topic',
   },
@@ -69,20 +70,21 @@ const financeOptions: FinancePluginOptions = {
       },
     ],
   },
-  availableFDC3Intents: ['ViewChart'],
+  availableFDC3Intents: ['ViewInstrument'],
   onFDC3Intent: (intent: any, context, adaptableApi) => {
     const { type } = context;
     adaptableApi.systemStatusApi.setInfoSystemStatus(
-      `FDC3 Intent (${intent}, ${type})`,
+      `IN :: Intent (${intent}, ${type})`,
       JSON.stringify(context)
     );
   },
   onFDC3Context: (context, adaptableApi) => {
     const { type } = context;
-    adaptableApi.systemStatusApi.setInfoSystemStatus(
-      'FDC3 Context (' + type + ')',
+    adaptableApi.systemStatusApi.setSuccessSystemStatus(
+      'IN :: Context Broadcast(' + type + ')',
       JSON.stringify(context)
     );
+    handleIncomingMessageBroadcast(context, adaptableApi);
   },
 };
 
@@ -852,7 +854,7 @@ export const AdaptableAgGrid = () => {
           // save a reference to adaptable api
           adaptableApiRef.current = adaptableApi;
 
-          const tradeDataGenerator = TradeDataGenerator.initialize(adaptableApi);
+          TradeDataGenerator.initialize(adaptableApi);
 
           // temporary hack, until https://github.com/AdaptableTools/adaptable/issues/1910 is fixed
           const positionCalCol =
@@ -864,13 +866,14 @@ export const AdaptableAgGrid = () => {
           gridOptions.columnApi?.autoSizeAllColumns();
 
           adaptableApi.eventApi.on('FDC3MessageSent', (eventInfo: AdaptableFDC3EventInfo) => {
-            if (eventInfo.eventType === 'BroadcastMessage') {
-              console.log(eventInfo);
-              adaptableApi.systemStatusApi.setInfoSystemStatus(
-                `Broadcasting ${eventInfo?.context?.id?.ticker} ${eventInfo?.context?.id?.CUSIP}`,
-                JSON.stringify(eventInfo.context)
-              );
-            }
+            adaptableApi.systemStatusApi.setInfoSystemStatus(
+              `OUT :: ${
+                eventInfo.eventType === 'RaiseIntent' ? 'Raise Intent' : 'Broadcast context'
+              } ${eventInfo.intent ?? ''}: ${eventInfo?.context?.id?.ticker} ${
+                eventInfo?.context?.id?.CUSIP
+              }`,
+              `${eventInfo.intent ?? ''}(${JSON.stringify(eventInfo.context)})`
+            );
           });
         }}
       />

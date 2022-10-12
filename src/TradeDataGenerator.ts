@@ -237,6 +237,10 @@ export class TradeDataGenerator {
     return schema;
   }
 
+  public static getAvailableTickers(): string[] {
+    return Object.keys(INSTRUMENT_DATA);
+  }
+
   generateTrade(config?: { tradeDateToday?: boolean }): Trade {
     const counter = this.state.currentCounter + 1;
 
