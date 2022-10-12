@@ -334,8 +334,7 @@ const adaptableOptions: AdaptableOptions = {
       {
         label: 'Assign to me',
         icon: {
-          src: 'person',
-          style: { margin: '5px' },
+          name: 'person',
         },
         onClick: (menuContext: ContextMenuContext) => {
           menuContext.adaptableApi.gridApi.setCellValue(
