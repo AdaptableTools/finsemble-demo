@@ -47,7 +47,7 @@ const hiddenContextMenus: AdaptableModule[] = [
 // let ag-grid know which columns and what data to use and add some other properties
 const gridOptions = TradeDataGenerator.getGridOptions();
 
-const STATE_REVISION = 1665498873207;
+const STATE_REVISION = 1665498873210;
 
 const finsembleOptions: FinsemblePluginOptions = {
   stateOptions: {
@@ -102,7 +102,6 @@ const adaptableOptions: AdaptableOptions = {
   },
   editOptions: {
     isCellEditable: (gridCell: GridCell) => {
-      // No row where 'Language' is 'HTML'
       if (gridCell.rowNode.data['status'] !== 'In Progress') {
         return false;
       }
@@ -121,6 +120,16 @@ const adaptableOptions: AdaptableOptions = {
   },
   actionOptions: {
     actionRowButtons: ['edit'],
+    actionRowButtonCustomConfiguration: () => {
+      return {
+        hidden: (button, context) => {
+          if (context.rowNode?.data?.['status'] !== 'In Progress') {
+            return true;
+          }
+          return false;
+        },
+      };
+    },
     actionColumns: [
       {
         columnId: 'changeStatus',

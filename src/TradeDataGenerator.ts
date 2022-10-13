@@ -89,7 +89,7 @@ export class TradeDataGenerator {
       enableRangeSelection: true,
       suppressColumnVirtualisation: false,
       suppressMenuHide: true,
-      sideBar: true,
+      sideBar: ['adaptable'],
       rowSelection: 'multiple',
       autoGroupColumnDef: {
         sortable: true,
