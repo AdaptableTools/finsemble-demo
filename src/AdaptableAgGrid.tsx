@@ -47,7 +47,7 @@ const hiddenContextMenus: AdaptableModule[] = [
 // let ag-grid know which columns and what data to use and add some other properties
 const gridOptions = TradeDataGenerator.getGridOptions();
 
-const STATE_REVISION = 1665498873210;
+const STATE_REVISION = 1665498873215;
 
 const finsembleOptions: FinsemblePluginOptions = {
   stateOptions: {
@@ -492,7 +492,7 @@ const adaptableOptions: AdaptableOptions = {
               'currency',
               'totalPrice',
               'pnl',
-              'position',
+              // 'position',
             ],
           },
           ReportColumnScope: 'ScopeColumns',
@@ -507,7 +507,7 @@ const adaptableOptions: AdaptableOptions = {
     },
     Dashboard: {
       Revision: STATE_REVISION,
-      DashboardTitle: 'AdapTable',
+      DashboardTitle: 'AdapTable Demo',
       Tabs: [
         {
           Name: 'Demo',
@@ -540,7 +540,7 @@ const adaptableOptions: AdaptableOptions = {
             'changeStatus',
             'marketPrice',
             'pnl',
-            'position',
+            // 'position',
             'totalPrice',
             'fill',
             'clientName',
@@ -574,7 +574,7 @@ const adaptableOptions: AdaptableOptions = {
             // 'currency',
             'marketPrice',
             'pnl',
-            'position',
+            // 'position',
             'totalPrice',
             'quantity',
             'unitPrice',
@@ -600,7 +600,7 @@ const adaptableOptions: AdaptableOptions = {
             'currency',
             'marketPrice',
             'pnl',
-            'position',
+            // 'position',
             'totalPrice',
             'quantity',
             'unitPrice',
@@ -618,7 +618,7 @@ const adaptableOptions: AdaptableOptions = {
           SuppressAggFuncInHeader: true,
           AggregationColumns: {
             pnl: 'sum',
-            position: 'sum',
+            // position: 'sum',
           },
         },
       ],
@@ -748,7 +748,7 @@ const adaptableOptions: AdaptableOptions = {
         },
         {
           Scope: {
-            ColumnIds: ['pnl', 'position'],
+            ColumnIds: ['pnl'], //, 'position'],
           },
           Style: {
             ForeColor: '#ff0000',
@@ -775,7 +775,7 @@ const adaptableOptions: AdaptableOptions = {
               'marketPrice',
               'commission',
               'pnl',
-              'position',
+              // 'position',
             ],
           },
           DisplayFormat: {
@@ -789,7 +789,7 @@ const adaptableOptions: AdaptableOptions = {
         },
         {
           Scope: {
-            ColumnIds: ['pnl', 'position'],
+            ColumnIds: ['pnl'], //, 'position'],
           },
           Style: {
             ForeColor: '#32cd32',
@@ -871,24 +871,24 @@ const adaptableOptions: AdaptableOptions = {
             SuppressMovable: false,
           },
         },
-        {
-          ColumnId: 'position',
-          Query: {
-            AggregatedScalarExpression: 'SUM([pnl] ,GROUP_BY([ticker] ) ) ',
-          },
-          CalculatedColumnSettings: {
-            DataType: 'Number',
-            Filterable: true,
-            Resizable: true,
-            Groupable: true,
-            Sortable: false,
-            Pivotable: true,
-            Aggregatable: true,
-            SuppressMenu: false,
-            SuppressMovable: false,
-          },
-          FriendlyName: 'Position',
-        },
+        // {
+        //   ColumnId: 'position',
+        //   Query: {
+        //     AggregatedScalarExpression: 'SUM([pnl] ,GROUP_BY([ticker] ) ) ',
+        //   },
+        //   CalculatedColumnSettings: {
+        //     DataType: 'Number',
+        //     Filterable: true,
+        //     Resizable: true,
+        //     Groupable: true,
+        //     Sortable: false,
+        //     Pivotable: true,
+        //     Aggregatable: true,
+        //     SuppressMenu: false,
+        //     SuppressMovable: false,
+        //   },
+        //   FriendlyName: 'Position',
+        // },
       ],
     },
     StyledColumn: {
@@ -955,11 +955,11 @@ export const AdaptableAgGrid = () => {
           TradeDataGenerator.initialize(adaptableApi);
 
           // temporary hack, until https://github.com/AdaptableTools/adaptable/issues/1910 is fixed
-          const positionCalCol =
-            adaptableApi.calculatedColumnApi.getCalculatedColumnForColumnId('position');
-          if (positionCalCol) {
-            adaptableApi.calculatedColumnApi.editCalculatedColumn(positionCalCol);
-          }
+          // const positionCalCol =
+          //   adaptableApi.calculatedColumnApi.getCalculatedColumnForColumnId('position');
+          // if (positionCalCol) {
+          //   adaptableApi.calculatedColumnApi.editCalculatedColumn(positionCalCol);
+          // }
 
           gridOptions.columnApi?.autoSizeAllColumns();
 

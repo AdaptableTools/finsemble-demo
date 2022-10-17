@@ -8,8 +8,8 @@ const DEFAULT_CONFIG: Required<DataGeneratorConfig> = {
   enableMarketPriceVariation: true,
   maxMarketPricePercentageVariation: 5,
   forcedMarketPricePercentageVariation: 10,
-  forceMarketPricePercentageVariationSequence: 50,
-  marketPriceVariationIntervalInSeconds: 2,
+  forceMarketPricePercentageVariationSequence: 100,
+  marketPriceVariationIntervalInSeconds: 1,
   enableContinuousTradeGeneration: true,
   tradeGenerationIntervalInSeconds: 60,
 };
