@@ -120,15 +120,17 @@ const adaptableOptions: AdaptableOptions = {
   },
   actionOptions: {
     actionRowButtons: ['edit'],
-    actionRowButtonCustomConfiguration: () => {
-      return {
-        hidden: (button, context) => {
-          if (context.rowNode?.data?.['status'] !== 'In Progress') {
-            return true;
-          }
-          return false;
-        },
-      };
+    actionRowButtonOptions:{
+      customConfiguration: () => {
+        return {
+          hidden: (button, context) => {
+            if (context.rowNode?.data?.['status'] !== 'In Progress') {
+              return true;
+            }
+            return false;
+          },
+        }
+    }
     },
     actionColumns: [
       {
@@ -279,7 +281,7 @@ const adaptableOptions: AdaptableOptions = {
           {
             label: 'Trigger Market Price Warning',
             onClick: (button, context) => {
-              const gridOptions: GridOptions = context.adaptableApi.internalApi.getAgGridInstance();
+              const gridOptions: GridOptions = context.adaptableApi.gridApi.getAgGridInstance();
               const tradeGenerator = gridOptions.context.tradeGenerator as TradeDataGenerator;
               tradeGenerator.updateMarketPriceOnRandomInstrument({
                 forceMarketPriceVariation: true,
@@ -303,11 +305,13 @@ const adaptableOptions: AdaptableOptions = {
                 adaptableApi.gridApi.getFirstDisplayedRowNode() ??
                 adaptableApi.gridApi.getFirstRowNode();
 
-              adaptableApi.gridApi.setCellValue(
-                'quantity',
-                anyRowNode.data['quantity'] * 2,
-                adaptableApi.gridApi.getPrimaryKeyValueForRowNode(anyRowNode)
-              );
+              if(anyRowNode){
+                adaptableApi.gridApi.setCellValue(
+                    'quantity',
+                    anyRowNode.data['quantity'] * 2,
+                    adaptableApi.gridApi.getPrimaryKeyValueForRowNode(anyRowNode)
+                );
+              }
             },
             buttonStyle: {
               tone: 'info',
@@ -324,7 +328,7 @@ const adaptableOptions: AdaptableOptions = {
   alertOptions: {
     alertMessageText: ({ alertDefinition, cellDataChangedInfo }) => {
       if (
-        alertDefinition.Rule?.Predicate?.PredicateId === 'Any' &&
+        alertDefinition.Rule?.Predicates?.[0]?.PredicateId === 'Any' &&
         cellDataChangedInfo?.column?.columnId === 'quantity'
       ) {
         return `Quantity of trade ${cellDataChangedInfo.rowData.tradeId}(${cellDataChangedInfo.rowData.clientName}) was changed from ${cellDataChangedInfo.oldValue} to ${cellDataChangedInfo.newValue}`;
@@ -337,7 +341,7 @@ const adaptableOptions: AdaptableOptions = {
         handler: (button, context) => {
           if (
             context.alert.alertType === 'rowChanged' &&
-            context.alert.alertDefinition?.Rule?.Predicate?.PredicateId === 'AddedRow'
+            context.alert.alertDefinition?.Rule?.Predicates?.[0]?.PredicateId === 'AddedRow'
           ) {
             const addedRowNode = context.alert.gridDataChangedInfo?.rowNodes?.[0];
             if (addedRowNode) {
@@ -640,9 +644,9 @@ const adaptableOptions: AdaptableOptions = {
             All: true,
           },
           Rule: {
-            Predicate: {
+            Predicates: [{
               PredicateId: 'AddedRow',
-            },
+            }],
           },
           MessageText: 'New Trade',
           MessageType: 'Info',
@@ -675,9 +679,9 @@ const adaptableOptions: AdaptableOptions = {
             ColumnIds: ['quantity'],
           },
           Rule: {
-            Predicate: {
+            Predicates: [{
               PredicateId: 'Any',
-            },
+            }],
           },
           MessageType: 'Info',
           AlertProperties: {
@@ -712,9 +716,9 @@ const adaptableOptions: AdaptableOptions = {
             ColumnIds: ['marketPrice'],
           },
           Rule: {
-            Predicate: {
+            Predicates: [{
               PredicateId: 'Any',
-            },
+            }],
           },
           DownChangeStyle: {
             BackColor: '#FF0000',
@@ -761,9 +765,9 @@ const adaptableOptions: AdaptableOptions = {
             },
           },
           Rule: {
-            Predicate: {
+            Predicates: [{
               PredicateId: 'Negative',
-            },
+            }],
           },
         },
         {
@@ -795,9 +799,9 @@ const adaptableOptions: AdaptableOptions = {
             ForeColor: '#32cd32',
           },
           Rule: {
-            Predicate: {
+            Predicates: [{
               PredicateId: 'Positive',
-            },
+            }],
           },
         },
         {

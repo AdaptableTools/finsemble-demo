@@ -1,5 +1,5 @@
-import { ColDef, GridOptions, RowNode } from '@ag-grid-community/core';
-import { AdaptableApi } from '@adaptabletools/adaptable/src/Api/AdaptableApi';
+import {ColDef, GridOptions, IRowNode} from '@ag-grid-community/core';
+import {AdaptableApi} from '@adaptabletools/adaptable/src/Api/AdaptableApi';
 
 const DEFAULT_CONFIG: Required<DataGeneratorConfig> = {
   initialTradesNumber: 400,
@@ -33,7 +33,7 @@ export class TradeDataGenerator {
   ): TradeDataGenerator {
     const generator = new TradeDataGenerator(adaptableApi, customConfig);
 
-    const gridOptions = adaptableApi.internalApi.getAgGridInstance() as GridOptions;
+    const gridOptions = adaptableApi.gridApi.getAgGridInstance() as GridOptions;
     gridOptions.context = gridOptions.context ?? {};
     gridOptions.context.tradeGenerator = generator;
 
@@ -325,8 +325,8 @@ export class TradeDataGenerator {
     ) as InstrumentInfo;
 
     // update all grid rows which reference the updated instrument
-    const relevantRowNodes: RowNode<Trade>[] = this.adaptableApi.gridApi.getAllRowNodes({
-      filterFn: (rowNode: RowNode<Trade>) => rowNode.data?.ticker === updatedInstrument.ticker,
+    const relevantRowNodes: IRowNode<Trade>[] = this.adaptableApi.gridApi.getAllRowNodes({
+      filterFn: (rowNode: IRowNode<Trade>) => rowNode.data?.ticker === updatedInstrument.ticker,
     });
     const updatedRowData = relevantRowNodes.map((rowNode) => ({
       ...rowNode.data,

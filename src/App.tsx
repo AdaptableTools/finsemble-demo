@@ -6,9 +6,8 @@ import '@adaptabletools/adaptable-react-aggrid/themes/light.css';
 import '@adaptabletools/adaptable-react-aggrid/themes/dark.css';
 
 // import aggrid themes (using new Alpine theme)
-import '@ag-grid-community/core/dist/styles/ag-grid.css';
-import '@ag-grid-community/core/dist/styles/ag-theme-balham.css';
-import '@ag-grid-community/core/dist/styles/ag-theme-balham-dark.css';
+import '@ag-grid-community/styles/ag-grid.css';
+import '@ag-grid-community/styles/ag-theme-balham.css';
 
 import './App.css';
 
