@@ -70,6 +70,14 @@ const financeOptions: FinancePluginOptions = {
         showBroadcastContextMenu: true,
       },
     ],
+    contactColumns: [
+      {
+        // TODO: JONNY
+        columnId: 'TODO email client',
+        nameColumnId: 'TODO user name',
+        emailColumnId: 'TODO email client',
+      },
+    ],
   },
   availableFDC3Intents: ['ViewInstrument'],
   onFDC3Intent: (intent: any, context, adaptableApi) => {
@@ -93,9 +101,9 @@ const financeOptions: FinancePluginOptions = {
 // in this example we are NOT passing in predefined config but in the real world you will ship the AdapTable with objects and permissions
 const adaptableOptions: AdaptableOptions = {
   primaryKey: 'tradeId',
- // licenseKey: process.env.REACT_APP_ADAPTABLE_LICENSE_KEY,
+  // licenseKey: process.env.REACT_APP_ADAPTABLE_LICENSE_KEY,
   licenseKey:
-  'StartDate=2021-10-20|EndDate=2024-01-01|Owner=AdaptableDocs|Type=development|DeveloperCount=1|Ref=AdaptableLicense-application|TS=1634732419321|C=869236154,2499530569,2954009380,2212294583,3235258666,1892324866,3606117680,1143328342',
+    'StartDate=2021-10-20|EndDate=2024-01-01|Owner=AdaptableDocs|Type=development|DeveloperCount=1|Ref=AdaptableLicense-application|TS=1634732419321|C=869236154,2499530569,2954009380,2212294583,3235258666,1892324866,3606117680,1143328342',
 
   userName: CURRENT_USER,
   adaptableId: 'finsemble-adaptable-demo',
@@ -198,7 +206,7 @@ const adaptableOptions: AdaptableOptions = {
             // replace with Client user name
             return `Call ${context.data['clientContact']}`;
           },
-          hidden:(button, context) => {
+          hidden: (button, context) => {
             return context.rowNode?.data?.status !== 'In Progress';
           },
           onClick: (button, context) => {
