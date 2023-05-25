@@ -1,4 +1,4 @@
-import { ColDef, GridOptions, IRowNode } from '@ag-grid-community/core';
+import { ColDef, ColGroupDef, GridOptions, IRowNode } from '@ag-grid-community/core';
 import { AdaptableApi } from '@adaptabletools/adaptable/src/Api/AdaptableApi';
 
 const DEFAULT_CONFIG: Required<DataGeneratorConfig> = {
@@ -114,8 +114,8 @@ export class TradeDataGenerator {
     return options;
   }
 
-  private static getColDefs(): ColDef[] {
-    const schema: ColDef[] = [];
+  private static getColDefs(): (ColDef | ColGroupDef)[] {
+    const schema: (ColDef | ColGroupDef)[] = [];
 
     schema.push({
       headerName: 'Trade Id',
@@ -137,12 +137,7 @@ export class TradeDataGenerator {
       editable: true,
       type: ['abColDefString'],
     });
-    schema.push({
-      headerName: 'Client',
-      field: 'clientName',
-      enableRowGroup: true,
-      type: ['abColDefString'],
-    });
+
     schema.push({
       headerName: 'Trade Date',
       field: 'tradeDate',
@@ -236,6 +231,29 @@ export class TradeDataGenerator {
       field: 'fill',
       type: ['abColDefNumber'],
     });
+    schema.push({
+      headerName: 'Client Information',
+      marryChildren: true,
+      children: [
+        {
+          headerName: 'Client',
+          field: 'clientName',
+          enableRowGroup: true,
+          type: ['abColDefString'],
+        },
+        {
+          headerName: 'Client Contact',
+          field: 'clientContact',
+          type: ['abColDefString'],
+        },
+        {
+          headerName: 'Client Email',
+          field: 'clientEmail',
+          type: ['abColDefString'],
+        },
+        { headerName: 'Call Client', colId: 'startCallClient', type: ['abSpecialColumn'] },
+      ],
+    });
     return schema;
   }
 
@@ -259,12 +277,15 @@ export class TradeDataGenerator {
       : marketPrice + unitPriceDeltaValue;
 
     const status = config?.tradeDateToday ? 'In Progress' : this.getTradeStatus(settlementDate);
-
+    const clientName = this.pickRandomElement(this.getCounterpartyData());
+    const clientContact = this.getClientContact(clientName);
     const tradeItem: Trade = {
       tradeId: `${counter}-${instrument.ticker}-${direction === 'Buy' ? 'B' : 'S'}`,
       user: this.pickRandomElement(this.getTraderData()),
       book: this.pickRandomElement(this.getBookData()),
-      clientName: this.pickRandomElement(this.getCounterpartyData()),
+      clientName: clientName,
+      clientContact: clientContact.contact,
+      clientEmail: clientContact.email,
       tradeDate,
       settlementDate,
       direction,
@@ -377,6 +398,12 @@ export class TradeDataGenerator {
 
   private getCounterpartyData(): readonly string[] {
     return COUNTERPARTY_DATA;
+  }
+
+  private getClientContact(clientName: string): clientContact {
+    return this.pickRandomElement(
+      COUNTERPARTY_CONTACTS.filter((c) => c.counterparty == clientName)
+    );
   }
 
   private getCurrencyData(): readonly string[] {
@@ -557,16 +584,125 @@ const BOOKS_DATA = ['A1', 'A2', 'A3', 'B1', 'B2', 'B2', 'B3'];
 const COUNTERPARTY_DATA = [
   'Goldman Sachs',
   'Soc Gen',
-  'BAML',
-  'Nat West Markets',
   'Barclays',
+  'BAML',
   'Citi',
   'JP Morgan',
   'Morgan Stanley',
-  'BNP',
   'UBS',
-  'Credit Suisse',
-  'Nomura',
+];
+
+interface clientContact {
+  counterparty: string;
+  contact: string;
+  email: string;
+}
+const COUNTERPARTY_CONTACTS: clientContact[] = [
+  {
+    counterparty: 'Goldman Sachs',
+    contact: 'GS1',
+    email: 'gs1@gs.com',
+  },
+  {
+    counterparty: 'Goldman Sachs',
+    contact: 'GS2',
+    email: 'gs2@gs.com',
+  },
+  {
+    counterparty: 'Goldman Sachs',
+    contact: 'GS3',
+    email: 'gs3@gs.com',
+  },
+  {
+    counterparty: 'Soc Gen',
+    contact: 'Soc1',
+    email: 'soc1@socgen.com',
+  },
+  {
+    counterparty: 'Soc Gen',
+    contact: 'Soc2',
+    email: 'soc2@socgen.com',
+  },
+  {
+    counterparty: 'Soc Gen',
+    contact: 'Soc3',
+    email: 'soc3@socgen.com',
+  },
+  {
+    counterparty: 'BAML',
+    contact: 'BAML1',
+    email: 'baml1@bankofamerica.com',
+  },
+  {
+    counterparty: 'BAML',
+    contact: 'BAML2',
+    email: 'baml2@bankofamerica.com',
+  },
+  {
+    counterparty: 'BAML',
+    contact: 'BAML3',
+    email: 'baml3@bankofamerica.com',
+  },
+  {
+    counterparty: 'Barclays',
+    contact: 'Barc1',
+    email: 'barc1@barcap.com',
+  },
+  {
+    counterparty: 'Barclays',
+    contact: 'Barc2',
+    email: 'barc2@barcap.com',
+  },
+  {
+    counterparty: 'Citi',
+    contact: 'Citi1',
+    email: 'citi1@citi.com',
+  },
+  {
+    counterparty: 'Citi',
+    contact: 'Citi2',
+    email: 'citi2@citi.com',
+  },
+  {
+    counterparty: 'JP Morgan',
+    contact: 'JP1',
+    email: 'jp1@jpmorgan.com',
+  },
+  {
+    counterparty: 'JP Morgan',
+    contact: 'JP2',
+    email: 'jp2@jpmorgan.com',
+  },
+  {
+    counterparty: 'JP Morgan',
+    contact: 'JP3',
+    email: 'jp3@jpmorgan.com',
+  },
+  {
+    counterparty: 'Morgan Stanley',
+    contact: 'MS1',
+    email: 'ms1@morganstanley.com',
+  },
+  {
+    counterparty: 'Morgan Stanley',
+    contact: 'MS2',
+    email: 'ms2@morganstanley.com',
+  },
+  {
+    counterparty: 'Morgan Stanley',
+    contact: 'MS3',
+    email: 'ms3@morganstanley.com',
+  },
+  {
+    counterparty: 'UBS',
+    contact: 'UBS1',
+    email: 'ubs1@ubs.com',
+  },
+  {
+    counterparty: 'UBS',
+    contact: 'UBS2',
+    email: 'ubs2@ubs.com',
+  },
 ];
 
 const CURRENCT_DATA = ['EUR', 'USD', 'GBP'];
@@ -644,6 +780,8 @@ export interface Trade {
   user: string;
   book: string;
   clientName: string;
+  clientContact: string;
+  clientEmail: string;
   tradeDate: Date;
   settlementDate: Date;
   direction: TradeDirection;
