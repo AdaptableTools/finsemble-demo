@@ -47,7 +47,7 @@ const hiddenContextMenus: AdaptableModule[] = [
 // let ag-grid know which columns and what data to use and add some other properties
 const gridOptions = TradeDataGenerator.getGridOptions();
 
-const STATE_REVISION = 1665498873215;
+const STATE_REVISION = 1665498873216;
 
 const finsembleOptions: FinsemblePluginOptions = {
   stateOptions: {
@@ -185,6 +185,34 @@ const adaptableOptions: AdaptableOptions = {
             },
           },
         ],
+      },
+      {
+        columnId: 'startCallClient',
+        friendlyName: 'Call Client',
+
+        actionColumnButton: {
+          label: (button, context) => {
+            // replace with Client user name
+            return `Call ${context.data['clientName']}`;
+          },
+          onClick: (button, context) => {
+            const rowNode = context.rowNode;
+            const financeApi = context.adaptableApi.pluginsApi.getFinancePluginApi();
+
+            const contactContext = financeApi.createFDC3ContactContext(
+              { columnId: 'clientName', nameColumnId: 'clientName' },
+              rowNode
+            );
+            financeApi.publishRaiseFDC3IntentEvent(contactContext, 'StartCall');
+          },
+          icon: {
+            name: 'call',
+          },
+          buttonStyle: {
+            variant: 'outlined',
+            tone: 'info',
+          },
+        },
       },
     ],
   },
@@ -539,6 +567,7 @@ const adaptableOptions: AdaptableOptions = {
             'totalPrice',
             'fill',
             'clientName',
+            'startCallClient',
             'book',
             'currency',
             'rating',
@@ -561,6 +590,7 @@ const adaptableOptions: AdaptableOptions = {
             // 'cusip',
             // 'instrument',
             'clientName',
+            'startCallClient',
             'book',
             // 'rating',
             'tradeDate',
@@ -587,6 +617,7 @@ const adaptableOptions: AdaptableOptions = {
             // 'cusip',
             // 'instrument',
             'clientName',
+            'startCallClient',
             'book',
             'rating',
             'tradeDate',
@@ -972,9 +1003,9 @@ export const AdaptableAgGrid = () => {
             adaptableApi.systemStatusApi.setInfoSystemStatus(
               `OUT :: ${
                 eventInfo.eventType === 'RaiseIntent' ? 'Raise Intent' : 'Broadcast context'
-              } ${eventInfo.intent ?? ''}: ${eventInfo?.context?.id?.ticker} ${
-                eventInfo?.context?.id?.CUSIP
-              }`,
+              } ${eventInfo.intent ?? ''}: ${eventInfo?.context?.id?.ticker ?? ''} ${
+                eventInfo?.context?.id?.CUSIP ?? ''
+              } ${eventInfo?.context?.name ?? ''} ${eventInfo?.context?.id?.email ?? ''}`,
               `${eventInfo.intent ?? ''}(${JSON.stringify(eventInfo.context)})`
             );
           });

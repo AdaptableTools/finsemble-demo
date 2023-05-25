@@ -20,9 +20,9 @@ export const handleIncomingMessageBroadcast = (
           Inputs: [tickerValue],
         },
       };
-      adaptableApi.filterApi.setColumnFilter([tickerFilter]);
+      adaptableApi.filterApi.setColumnFilters([tickerFilter]);
     } else {
-      adaptableApi.filterApi.clearColumnFilterByColumn('ticker');
+      adaptableApi.filterApi.clearColumnFilterForColumn('ticker');
       adaptableApi.alertApi.showAlertWarning(
         'AdapTable missing ticker',
         `AdapTable Blotter does NOT contain any trades for Ticker ${tickerValue}`

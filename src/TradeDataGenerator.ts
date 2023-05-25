@@ -1,5 +1,5 @@
-import {ColDef, GridOptions, IRowNode} from '@ag-grid-community/core';
-import {AdaptableApi} from '@adaptabletools/adaptable/src/Api/AdaptableApi';
+import { ColDef, GridOptions, IRowNode } from '@ag-grid-community/core';
+import { AdaptableApi } from '@adaptabletools/adaptable/src/Api/AdaptableApi';
 
 const DEFAULT_CONFIG: Required<DataGeneratorConfig> = {
   initialTradesNumber: 400,
