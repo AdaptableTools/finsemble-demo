@@ -102,10 +102,7 @@ const adaptableOptions: AdaptableOptions = {
   },
   editOptions: {
     isCellEditable: (gridCell: GridCell) => {
-      if (gridCell.rowNode.data['status'] !== 'In Progress') {
-        return false;
-      }
-      return true;
+      return gridCell.rowNode.data['status'] !== 'In Progress';
     },
   },
 
@@ -120,17 +117,14 @@ const adaptableOptions: AdaptableOptions = {
   },
   actionOptions: {
     actionRowButtons: ['edit'],
-    actionRowButtonOptions:{
+    actionRowButtonOptions: {
       customConfiguration: () => {
         return {
           hidden: (button, context) => {
-            if (context.rowNode?.data?.['status'] !== 'In Progress') {
-              return true;
-            }
-            return false;
+            return context.rowNode?.data?.['status'] !== 'In Progress';
           },
-        }
-    }
+        };
+      },
     },
     actionColumns: [
       {
@@ -215,7 +209,7 @@ const adaptableOptions: AdaptableOptions = {
               button: AdaptableButton<CustomToolbarButtonContext>,
               context: CustomToolbarButtonContext
             ) => {
-              context.adaptableApi.settingsPanelApi.showCustomSettingsPanel('About AdapTable');
+              context.adaptableApi.settingsPanelApi.openCustomSettingsPanel('About AdapTable');
             },
           },
         ],
@@ -234,8 +228,8 @@ const adaptableOptions: AdaptableOptions = {
               context: CustomToolbarButtonContext
             ) => {
               return (
-                context.adaptableApi.filterApi.getColumnFilter('user')?.Predicate?.PredicateId ===
-                'currentUser'
+                context.adaptableApi.filterApi.getColumnFilterForColumn('user')?.Predicate
+                  ?.PredicateId === 'currentUser'
               );
             },
             onClick: (
@@ -250,7 +244,7 @@ const adaptableOptions: AdaptableOptions = {
                   },
                 },
               ];
-              context.adaptableApi.filterApi.setColumnFilter(myTradesFilters);
+              context.adaptableApi.filterApi.setColumnFilters(myTradesFilters);
             },
           },
           {
@@ -263,13 +257,13 @@ const adaptableOptions: AdaptableOptions = {
               button: AdaptableButton<CustomToolbarButtonContext>,
               context: CustomToolbarButtonContext
             ) => {
-              return !context.adaptableApi.filterApi.getColumnFilter('user');
+              return !context.adaptableApi.filterApi.getColumnFilterForColumn('user');
             },
             onClick: (
               button: AdaptableButton<CustomToolbarButtonContext>,
               context: CustomToolbarButtonContext
             ) => {
-              context.adaptableApi.filterApi.clearColumnFilterByColumn('user');
+              context.adaptableApi.filterApi.clearColumnFilterForColumn('user');
             },
           },
         ],
@@ -305,11 +299,11 @@ const adaptableOptions: AdaptableOptions = {
                 adaptableApi.gridApi.getFirstDisplayedRowNode() ??
                 adaptableApi.gridApi.getFirstRowNode();
 
-              if(anyRowNode){
+              if (anyRowNode) {
                 adaptableApi.gridApi.setCellValue(
-                    'quantity',
-                    anyRowNode.data['quantity'] * 2,
-                    adaptableApi.gridApi.getPrimaryKeyValueForRowNode(anyRowNode)
+                  'quantity',
+                  anyRowNode.data['quantity'] * 2,
+                  adaptableApi.gridApi.getPrimaryKeyValueForRowNode(anyRowNode)
                 );
               }
             },
@@ -381,10 +375,7 @@ const adaptableOptions: AdaptableOptions = {
           ColumnIds: ['user'],
         },
         handler: (params: PredicateDefHandlerParams) => {
-          if (typeof params.value === 'string' && params.value.includes('Finsemble')) {
-            return true;
-          }
-          return false;
+          return typeof params.value === 'string' && params.value.includes('Finsemble');
         },
       },
     ],
@@ -644,9 +635,11 @@ const adaptableOptions: AdaptableOptions = {
             All: true,
           },
           Rule: {
-            Predicates: [{
-              PredicateId: 'AddedRow',
-            }],
+            Predicates: [
+              {
+                PredicateId: 'AddedRow',
+              },
+            ],
           },
           MessageText: 'New Trade',
           MessageType: 'Info',
@@ -679,9 +672,11 @@ const adaptableOptions: AdaptableOptions = {
             ColumnIds: ['quantity'],
           },
           Rule: {
-            Predicates: [{
-              PredicateId: 'Any',
-            }],
+            Predicates: [
+              {
+                PredicateId: 'Any',
+              },
+            ],
           },
           MessageType: 'Info',
           AlertProperties: {
@@ -716,9 +711,11 @@ const adaptableOptions: AdaptableOptions = {
             ColumnIds: ['marketPrice'],
           },
           Rule: {
-            Predicates: [{
-              PredicateId: 'Any',
-            }],
+            Predicates: [
+              {
+                PredicateId: 'Any',
+              },
+            ],
           },
           DownChangeStyle: {
             BackColor: '#FF0000',
@@ -765,9 +762,11 @@ const adaptableOptions: AdaptableOptions = {
             },
           },
           Rule: {
-            Predicates: [{
-              PredicateId: 'Negative',
-            }],
+            Predicates: [
+              {
+                PredicateId: 'Negative',
+              },
+            ],
           },
         },
         {
@@ -799,9 +798,11 @@ const adaptableOptions: AdaptableOptions = {
             ForeColor: '#32cd32',
           },
           Rule: {
-            Predicates: [{
-              PredicateId: 'Positive',
-            }],
+            Predicates: [
+              {
+                PredicateId: 'Positive',
+              },
+            ],
           },
         },
         {
