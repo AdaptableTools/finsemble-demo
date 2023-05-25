@@ -70,6 +70,14 @@ const financeOptions: FinancePluginOptions = {
         showBroadcastContextMenu: true,
       },
     ],
+    contactColumns: [
+      {
+        // TODO: JONNY
+        columnId: 'TODO email client',
+        nameColumnId: 'TODO user name',
+        emailColumnId: 'TODO email client',
+      },
+    ],
   },
   availableFDC3Intents: ['ViewInstrument'],
   onFDC3Intent: (intent: any, context, adaptableApi) => {
@@ -200,7 +208,12 @@ const adaptableOptions: AdaptableOptions = {
             const financeApi = context.adaptableApi.pluginsApi.getFinancePluginApi();
 
             const contactContext = financeApi.createFDC3ContactContext(
-              { columnId: 'clientName', nameColumnId: 'clientName' },
+              // TODO JONNY: add email and use it as columnId
+              {
+                columnId: 'clientName',
+                nameColumnId: 'clientName',
+                emailColumnId: 'TODO email user',
+              },
               rowNode
             );
             financeApi.publishRaiseFDC3IntentEvent(contactContext, 'StartCall');
