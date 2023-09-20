@@ -4,7 +4,7 @@
 
 This is a small demo application of AdapTable designed to be used inside Finsemble.
 
-This branch was created on 20 September 2020 to support v.16.x of AdapTable and v.30.x of AG GRID
+This branch was created on 20 September 2023 to support v.16.x of AdapTable and v.30.x of AG GRID
 
 
 ## Licences
