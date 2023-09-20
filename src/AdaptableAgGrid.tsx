@@ -98,7 +98,6 @@ const financeOptions: FinancePluginOptions = {
 };
 
 // build the AdaptableOptions object
-// in this example we are NOT passing in predefined config but in the real world you will ship the AdapTable with objects and permissions
 const adaptableOptions: AdaptableOptions = {
   primaryKey: 'tradeId',
   licenseKey: process.env.REACT_APP_ADAPTABLE_LICENSE_KEY,
