@@ -1,5 +1,6 @@
+import { AdaptableApi } from '@adaptabletools/adaptable-react-aggrid';
 import { ColDef, ColGroupDef, GridOptions, IRowNode } from '@ag-grid-community/core';
-import { AdaptableApi } from '@adaptabletools/adaptable/src/Api/AdaptableApi';
+
 
 const DEFAULT_CONFIG: Required<DataGeneratorConfig> = {
   initialTradesNumber: 400,
@@ -42,7 +43,7 @@ export class TradeDataGenerator {
     // generate initial data
     if (config.initialTradesNumber > 0) {
       const initialTrades = generator.generateTrades(config.initialTradesNumber);
-      adaptableApi.gridApi.setGridData(initialTrades);
+      adaptableApi.gridApi.setInitialGridData(initialTrades);
     }
 
     // generate new trade on a given interval

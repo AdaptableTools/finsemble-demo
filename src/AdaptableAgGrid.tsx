@@ -4,31 +4,32 @@ import AdaptableReact, {
   ActionColumnContext,
   AdaptableApi,
   AdaptableButton,
-  AdaptableFDC3EventInfo,
   AdaptableMenuItem,
   AdaptableModule,
   AdaptableOptions,
+  CellEditableContext,
+  CellUpdateRequest,
+  ColumnFilter,
   ContextMenuContext,
-  FinancePluginOptions,
+  CustomToolbarButtonContext,
   FinsemblePluginOptions,
   GridCell,
+  PredicateDefHandlerContext,
 } from '@adaptabletools/adaptable-react-aggrid';
 
-// import agGrid Component
-import { AgGridReact } from '@ag-grid-community/react';
+import { createRoot } from 'react-dom/client';
+
 
 import { RECOMMENDED_MODULES } from './agGridModules';
 
-import finance from '@adaptabletools/adaptable-plugin-finance';
 import finsemble from '@adaptabletools/adaptable-plugin-finsemble';
 
 import { CURRENT_USER, TradeDataGenerator } from './TradeDataGenerator';
 import { AboutPanelComponent } from './AboutPanel';
-import { PredicateDefHandlerParams } from '@adaptabletools/adaptable/src/PredefinedConfig/Common/AdaptablePredicate';
-import { CustomToolbarButtonContext } from '@adaptabletools/adaptable/src/AdaptableOptions/DashboardOptions';
-import { ColumnFilter } from '@adaptabletools/adaptable/src/types';
-import { handleIncomingMessageBroadcast } from './finsembleUtils';
+
 import { GridOptions } from '@ag-grid-community/core';
+import { Root } from 'react-dom/client';
+import { AgGridReact } from '@ag-grid-community/react/lib/agGridReact';
 
 const hiddenContextMenus: AdaptableModule[] = [
   'CellSummary',
@@ -58,45 +59,6 @@ const finsembleOptions: FinsemblePluginOptions = {
   showAdaptableAlertsAsNotifications: true,
 };
 
-const financeOptions: FinancePluginOptions = {
-  fdc3Columns: {
-    instrumentColumns: [
-      {
-        columnId: 'instrument',
-        nameColumnId: 'Instrument',
-        tickerColumnId: 'ticker',
-        cusipColumnId: 'cusip',
-        intents: ['ViewChart'],
-        showBroadcastContextMenu: true,
-      },
-    ],
-    contactColumns: [
-      {
-        // TODO: JONNY
-        columnId: 'TODO email client',
-        nameColumnId: 'TODO user name',
-        emailColumnId: 'TODO email client',
-      },
-    ],
-  },
-  availableFDC3Intents: ['ViewInstrument'],
-  onFDC3Intent: (intent: any, context, adaptableApi) => {
-    const { type } = context;
-    adaptableApi.systemStatusApi.setInfoSystemStatus(
-      `IN :: Intent (${intent}, ${type})`,
-      JSON.stringify(context)
-    );
-  },
-  onFDC3Context: (context, adaptableApi) => {
-    const { type } = context;
-    adaptableApi.systemStatusApi.setSuccessSystemStatus(
-      'IN :: Context Broadcast(' + type + ')',
-      JSON.stringify(context)
-    );
-    handleIncomingMessageBroadcast(context, adaptableApi);
-  },
-};
-
 // build the AdaptableOptions object
 const adaptableOptions: AdaptableOptions = {
   primaryKey: 'tradeId',
@@ -104,13 +66,13 @@ const adaptableOptions: AdaptableOptions = {
 
   userName: CURRENT_USER,
   adaptableId: 'finsemble-adaptable-demo',
-  plugins: [finance(financeOptions), finsemble(finsembleOptions)],
+  plugins: [finsemble(finsembleOptions)],
   layoutOptions: {
     autoSizeColumnsInLayout: true,
   },
   editOptions: {
-    isCellEditable: (gridCell: GridCell) => {
-      return gridCell.rowNode.data['status'] !== 'In Progress';
+    isCellEditable: (cellEditableContext: CellEditableContext) => {
+      return cellEditableContext.gridCell.rowNode.data['status'] !== 'In Progress';
     },
   },
 
@@ -123,7 +85,7 @@ const adaptableOptions: AdaptableOptions = {
       },
     ],
   },
-  actionOptions: {
+  actionRowOptions: {
     actionRowButtons: ['edit'],
     actionRowButtonOptions: {
       customConfiguration: () => {
@@ -134,6 +96,8 @@ const adaptableOptions: AdaptableOptions = {
         };
       },
     },
+  },
+  actionColumnOptions: {
     actionColumns: [
       {
         columnId: 'changeStatus',
@@ -155,11 +119,12 @@ const adaptableOptions: AdaptableOptions = {
               button: AdaptableButton<ActionColumnContext>,
               context: ActionColumnContext
             ) => {
-              context.adaptableApi.gridApi.setCellValue(
-                'status',
-                'Completed',
-                context.primaryKeyValue
-              );
+              const cellUpdateRequest: CellUpdateRequest = {
+                columnId: 'status',
+                newValue: 'Completed',
+                primaryKeyValue: context.primaryKeyValue,
+              };
+              context.adaptableApi.gridApi.setCellValue(cellUpdateRequest);
             },
             buttonStyle: {
               variant: 'outlined',
@@ -181,11 +146,12 @@ const adaptableOptions: AdaptableOptions = {
               button: AdaptableButton<ActionColumnContext>,
               context: ActionColumnContext
             ) => {
-              context.adaptableApi.gridApi.setCellValue(
-                'status',
-                'Rejected',
-                context.primaryKeyValue
-              );
+              const cellUpdateRequest: CellUpdateRequest = {
+                columnId: 'status',
+                newValue: 'Rejected',
+                primaryKeyValue: context.primaryKeyValue,
+              };
+              context.adaptableApi.gridApi.setCellValue(cellUpdateRequest);
             },
             buttonStyle: {
               variant: 'outlined',
@@ -193,37 +159,6 @@ const adaptableOptions: AdaptableOptions = {
             },
           },
         ],
-      },
-      {
-        columnId: 'startCallClient',
-        friendlyName: 'Call Client',
-
-        actionColumnButton: {
-          label: (button, context) => {
-            // replace with Client user name
-            return `Call ${context.data['clientContact']}`;
-          },
-          hidden: (button, context) => {
-            return context.rowNode?.data?.status !== 'In Progress';
-          },
-          onClick: (button, context) => {
-            const rowNode = context.rowNode;
-            const financeApi = context.adaptableApi.pluginsApi.getFinancePluginApi();
-
-            const contactContext = financeApi.createFDC3ContactContext(
-              { columnId: 'clientName', nameColumnId: 'clientName', emailColumnId: 'clientEmail' },
-              rowNode
-            );
-            financeApi.publishRaiseFDC3IntentEvent(contactContext, 'StartCall');
-          },
-          icon: {
-            name: 'call',
-          },
-          buttonStyle: {
-            variant: 'outlined',
-            tone: 'info',
-          },
-        },
       },
     ],
   },
@@ -339,11 +274,12 @@ const adaptableOptions: AdaptableOptions = {
                 adaptableApi.gridApi.getFirstRowNode();
 
               if (anyRowNode) {
-                adaptableApi.gridApi.setCellValue(
-                  'quantity',
-                  anyRowNode.data['quantity'] * 2,
-                  adaptableApi.gridApi.getPrimaryKeyValueForRowNode(anyRowNode)
-                );
+                const cellUpdateRequest: CellUpdateRequest = {
+                  columnId: 'quantity',
+                  newValue: anyRowNode.data['quantity'] * 2,
+                  primaryKeyValue: adaptableApi.gridApi.getPrimaryKeyValueForRowNode(anyRowNode),
+                };
+                adaptableApi.gridApi.setCellValue(cellUpdateRequest);
               }
             },
             buttonStyle: {
@@ -378,16 +314,20 @@ const adaptableOptions: AdaptableOptions = {
           ) {
             const addedRowNode = context.alert.gridDataChangedInfo?.rowNodes?.[0];
             if (addedRowNode) {
-              const primaryKeyValue =
-                context.adaptableApi.gridApi.getPrimaryKeyValueForRowNode(addedRowNode);
-              context.adaptableApi.gridApi.setCellValue('user', CURRENT_USER, primaryKeyValue);
+              const cellUpdateRequest: CellUpdateRequest = {
+                columnId: 'user',
+                newValue: CURRENT_USER,
+                primaryKeyValue:
+                  context.adaptableApi.gridApi.getPrimaryKeyValueForRowNode(addedRowNode),
+              };
+              context.adaptableApi.gridApi.setCellValue(cellUpdateRequest);
             }
           }
         },
       },
     ],
   },
-  generalOptions: {
+  customSortOptions: {
     customSortComparers: [
       {
         scope: {
@@ -399,12 +339,7 @@ const adaptableOptions: AdaptableOptions = {
       },
     ],
   },
-  adaptableQLOptions: {
-    expressionOptions: {
-      customQueryVariables: {
-        currentUser: CURRENT_USER,
-      },
-    },
+  predicateOptions: {
     customPredicateDefs: [
       {
         id: 'currentUser',
@@ -413,11 +348,17 @@ const adaptableOptions: AdaptableOptions = {
         columnScope: {
           ColumnIds: ['user'],
         },
-        handler: (params: PredicateDefHandlerParams) => {
+        handler: (params: PredicateDefHandlerContext) => {
           return typeof params.value === 'string' && params.value.includes('Finsemble');
         },
       },
     ],
+  },
+
+  expressionOptions: {
+    customQueryVariables: {
+      currentUser: CURRENT_USER,
+    },
   },
   menuOptions: {
     // remove some menu items to keep things easier
@@ -435,11 +376,12 @@ const adaptableOptions: AdaptableOptions = {
           name: 'person',
         },
         onClick: (menuContext: ContextMenuContext) => {
-          menuContext.adaptableApi.gridApi.setCellValue(
-            'user',
-            CURRENT_USER,
-            menuContext.primaryKeyValue
-          );
+          const cellUpdateRequest: CellUpdateRequest = {
+            columnId: 'user',
+            newValue: CURRENT_USER,
+            primaryKeyValue: menuContext.primaryKeyValue,
+          };
+          menuContext.adaptableApi.gridApi.setCellValue(cellUpdateRequest);
         },
         hidden: (menuContext: ContextMenuContext) => {
           return (
@@ -990,6 +932,9 @@ const adaptableOptions: AdaptableOptions = {
 
 const modules = RECOMMENDED_MODULES;
 
+const renderWeakMap: WeakMap<HTMLElement, Root> = new WeakMap();
+
+
 export const AdaptableAgGrid = () => {
   const adaptableApiRef = React.useRef<AdaptableApi>();
   return (
@@ -998,31 +943,24 @@ export const AdaptableAgGrid = () => {
         style={{ flex: 'none' }}
         gridOptions={gridOptions}
         adaptableOptions={adaptableOptions}
+        renderReactRoot={(node, container) => {
+          let root = renderWeakMap.get(container);
+          if (!root) {
+            renderWeakMap.set(container, (root = createRoot(container)));
+          }
+          root.render(node);
+          return () => {
+            root?.unmount();
+          };
+        }}
         onAdaptableReady={({ adaptableApi, gridOptions }) => {
           // save a reference to adaptable api
           adaptableApiRef.current = adaptableApi;
 
           TradeDataGenerator.initialize(adaptableApi);
 
-          // temporary hack, until https://github.com/AdaptableTools/adaptable/issues/1910 is fixed
-          // const positionCalCol =
-          //   adaptableApi.calculatedColumnApi.getCalculatedColumnForColumnId('position');
-          // if (positionCalCol) {
-          //   adaptableApi.calculatedColumnApi.editCalculatedColumn(positionCalCol);
-          // }
-
           gridOptions.columnApi?.autoSizeAllColumns();
-
-          adaptableApi.eventApi.on('FDC3MessageSent', (eventInfo: AdaptableFDC3EventInfo) => {
-            adaptableApi.systemStatusApi.setInfoSystemStatus(
-              `OUT :: ${
-                eventInfo.eventType === 'RaiseIntent' ? 'Raise Intent' : 'Broadcast context'
-              } ${eventInfo.intent ?? ''}: ${eventInfo?.context?.id?.ticker ?? ''} ${
-                eventInfo?.context?.id?.CUSIP ?? ''
-              } ${eventInfo?.context?.name ?? ''} ${eventInfo?.context?.id?.email ?? ''}`,
-              `${eventInfo.intent ?? ''}(${JSON.stringify(eventInfo.context)})`
-            );
-          });
+          
         }}
       />
       <div className="ag-theme-balham" style={{ flex: 1, height: 'calc(100vh - 40px)' }}>
