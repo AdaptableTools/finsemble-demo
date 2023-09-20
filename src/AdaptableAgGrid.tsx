@@ -13,7 +13,6 @@ import AdaptableReact, {
   ContextMenuContext,
   CustomToolbarButtonContext,
   FinsemblePluginOptions,
-  GridCell,
   PredicateDefHandlerContext,
 } from '@adaptabletools/adaptable-react-aggrid';
 
@@ -133,7 +132,7 @@ const adaptableOptions: AdaptableOptions = {
           },
           {
             icon: {
-              name: 'clear',
+              name: 'close'
             },
             tooltip: 'Reject',
             hidden: (
@@ -521,7 +520,6 @@ const adaptableOptions: AdaptableOptions = {
             'fill',
             'clientName',
             'clientContact',
-            'startCallClient',
             'book',
             'currency',
             'rating',
@@ -544,7 +542,7 @@ const adaptableOptions: AdaptableOptions = {
             // 'cusip',
             // 'instrument',
             'clientName',
-            'startCallClient',
+       //     'startCallClient',
             'book',
             // 'rating',
             'tradeDate',
@@ -612,7 +610,7 @@ const adaptableOptions: AdaptableOptions = {
         },
       ],
     },
-    /*
+    
     Alert: {
       Revision: STATE_REVISION,
       AlertDefinitions: [
@@ -689,7 +687,7 @@ const adaptableOptions: AdaptableOptions = {
         },
       ],
     },
-    */
+    
     FlashingCell: {
       Revision: STATE_REVISION,
       FlashingCellDefinitions: [
@@ -863,24 +861,6 @@ const adaptableOptions: AdaptableOptions = {
             SuppressMovable: false,
           },
         },
-        // {
-        //   ColumnId: 'position',
-        //   Query: {
-        //     AggregatedScalarExpression: 'SUM([pnl] ,GROUP_BY([ticker] ) ) ',
-        //   },
-        //   CalculatedColumnSettings: {
-        //     DataType: 'Number',
-        //     Filterable: true,
-        //     Resizable: true,
-        //     Groupable: true,
-        //     Sortable: false,
-        //     Pivotable: true,
-        //     Aggregatable: true,
-        //     SuppressMenu: false,
-        //     SuppressMovable: false,
-        //   },
-        //   FriendlyName: 'Position',
-        // },
       ],
     },
     StyledColumn: {
