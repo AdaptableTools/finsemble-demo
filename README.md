@@ -4,7 +4,7 @@
 
 This is a small demo application of AdapTable designed to be used inside Finsemble.
 
-It uses v.15.x (AdapTable Rx) of AdapTable and v.29.x of AG GRID
+It uses v.15.x of AdapTable and v.29.x of AG GRID
 
 
 ## Licences
